@@ -3,8 +3,9 @@ import random
 import carla
 
 from typing import Optional, Callable
-from environment import Environment
-from vehicle_factory import VehicleFactory
+
+from src.environment import Environment
+from src.vehicle_factory import VehicleFactory
 
 class Task:
     def __init__(self, world: carla.World) -> None:

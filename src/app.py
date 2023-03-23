@@ -1,5 +1,7 @@
-import utils
-utils.add_carla_path()
+from src.utils import add_carla_path, suppress_stdout
+add_carla_path()
+
+from typing import Optional, List, cast
 
 try:
     import carla
@@ -7,23 +9,20 @@ except ImportError:
     raise RuntimeError('cannot import CARLA')
 
 try:
-    with utils.suppress_stdout():
+    with suppress_stdout():
         import pygame
 except ImportError:
     raise RuntimeError('pygame is not installed')
 
-from controller import Controller, ActionType
-
 import time
 
-from typing import Optional, List, cast
-
-from settings import Settings
-from runner import Runner
-from carla_sync_mode import CarlaSyncMode
-from environment import Environment
-from vehicle_factory import VehicleFactory
-from mirror import Mirror
+from src.controller import Controller, ActionType
+from src.settings import Settings
+from src.runner import Runner
+from src.carla_sync_mode import CarlaSyncMode
+from src.environment import Environment
+from src.vehicle_factory import VehicleFactory
+from src.mirror import Mirror
 
 
 class App:
@@ -125,11 +124,3 @@ class App:
                 actor.destroy()
 
             pygame.quit()
-
-if __name__ == '__main__':
-    try:
-        App().run()
-    except KeyboardInterrupt:
-        print('\nCancelled by user. Bye!')
-    else:
-        print('done.')

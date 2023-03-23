@@ -1,10 +1,7 @@
 from queue import Queue
 from typing import Callable, List, Union, Any, Tuple
 
-try:
-    import carla
-except ImportError:
-    raise RuntimeError('cannot import CARLA')
+import carla
 
 QueryResult = Union[carla.WorldSnapshot, carla.SensorData]
 

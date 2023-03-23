@@ -1,13 +1,11 @@
-import os
-
 from typing import Optional, Tuple
 
-if os.name == 'nt':
+try:
     import win32api
     import win32con
     import win32gui
-else:
-    raise Exception('This app should run on a Windows machine')
+except ImportError:
+    raise RuntimeError('pywin32 is not installed')
 
 class Window:
     def __init__(self, hwnd: Optional[int] = None):

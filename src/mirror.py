@@ -5,19 +5,21 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+from src.winapi import Window
+
+from typing import Optional, Tuple, cast
+
 import copy
 import pygame
 import carla
 import win32gui
 
-from typing import Optional, Tuple, cast
-from settings import Settings, Side
-from winapi import Window
-
 try:
     import numpy as np
 except ImportError:
     raise RuntimeError('numpy is not installed')
+
+from src.settings import Settings, Side
 
 
 class Mirror:

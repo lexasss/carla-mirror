@@ -1,15 +1,13 @@
 from typing import Callable, Optional, Tuple, Type, Union
 
-# pyright: reportUnusedImport=false
-
 # Most useful stuff
-from . import surface, rect, color, constants, event, bufferproxy, draw, display, font, image, key, mixer, mouse, time, version
+from . import surface, rect, color, constants, event, bufferproxy, draw, display, font, image, key, mixer, mouse, time, version # pyright: ignore [reportUnusedImport]
 
 # Advanced stuff
-from . import math, pixelarray, cursors, joystick, mask, sprite, transform, pixelcopy, sndarray, surfarray, fastevent
+from . import math, pixelarray, cursors, joystick, mask, sprite, transform, pixelcopy, sndarray, surfarray, fastevent # pyright: ignore [reportUnusedImport]
 
 # Other
-#from . import scrap
+from . import scrap # pyright: ignore [reportUnusedImport]
 
 # This classes are auto imported with pygame, so I put their declaration here
 class Rect(rect.Rect): ...

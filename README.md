@@ -2,6 +2,8 @@
 
 ## Setup
 
+CARLA PythonAPI is expected in `../carla/dist` relative to this project
+
 ### Configuring Pylance (`Python > Analysis`)
 
 Add `{path_to_carla}\PythonAPI\carla\dist\carla-0.9.13-py3.7-win-amd64.egg` to the `Extra Paths`

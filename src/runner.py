@@ -1,14 +1,14 @@
 import carla
 import math
 import time
-import winapi
-
-from environment import Environment
-from vehicle_factory import VehicleFactory
-from controller import ActionType, Action
-from task import Task
 
 from typing import Optional, List, cast
+
+from src.environment import Environment
+from src.vehicle_factory import VehicleFactory
+from src.controller import ActionType, Action
+from src.task import Task
+from src.winapi import Window
 
 TRAFFIC_COUNT = 0
 
@@ -28,7 +28,7 @@ class Runner:
         self._search_target: Optional[carla.Actor] = None
         self._next_search_time: float = 0
         self._approaching_vehicle: Optional[str] = None
-        self._blocking_window = None
+        self._blocking_window: Optional[Window] = None
 
     def make_step(self,
                   world_snapshot: carla.WorldSnapshot,
@@ -98,7 +98,7 @@ class Runner:
                     self._approaching_vehicle = vehicle.type_id
                     self._next_search_time = time.time() + 3
                     print(f'{vehicle.type_id} {vehicle.get_transform().location} is approaching the ego car {ego_car_snapshot.get_transform().location}')
-                    self._blocking_window = winapi.Window()
+                    self._blocking_window = Window()
                     break
         else:
             self.task.display_info(ego_car_snapshot, f'{self._approaching_vehicle} is approaching the ego car')

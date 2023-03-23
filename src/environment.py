@@ -2,9 +2,10 @@ import math
 import random
 import carla
 
-from vehicle_factory import VehicleFactory
-from settings import Settings
 from typing import Callable, Optional
+
+from src.vehicle_factory import VehicleFactory
+from src.settings import Settings
 
 class Environment:
     FPS = 30
