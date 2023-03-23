@@ -1,4 +1,11 @@
-from typing import IO, Literal, Optional, Sequence, Tuple, Union
+import sys
+
+from typing import IO, Optional, Sequence, Tuple, Union
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 from . import bufferproxy, surface
 

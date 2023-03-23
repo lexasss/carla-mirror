@@ -1,10 +1,18 @@
 # Experiment controller for CARLA drivers
 
+## Setup
+
+### Configuring Pylance (`Python > Analysis`)
+
+Add `{path_to_carla}\PythonAPI\carla\dist\carla-0.9.13-py3.7-win-amd64.egg` to the `Extra Paths`
+
+It is expected that
+- `Type Checking Mode` = `strict`
+- `Stub Path` = `typings`
 
 ## Requires
 
 - python@3.7
-
 - pygame@2.2
 - numpy@1.21
 - pywin32@305

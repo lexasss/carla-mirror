@@ -16,7 +16,6 @@ from winapi import Window
 
 try:
     import numpy as np
-    #import numpy.typing as npt
 except ImportError:
     raise RuntimeError('numpy is not installed')
 
