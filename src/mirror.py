@@ -34,6 +34,8 @@ class Mirror:
         self.mask = pygame.transform.scale(mask, (settings.width + 1, settings.height + 1))  # black lines may be visible at the edges if we do not expand the image by 1 pixels in each dimension
         self.camera = self.make_camera(settings.width, settings.height, settings.fov, settings.side, vehicle) if vehicle is not None else None
 
+        self.enabled = True
+        
         self._is_mouse_down: bool = False
         self._mouse_pos: Tuple[int, int] = (0, 0)
         self._window_pos: Tuple[int, int] = (0, 0)
@@ -95,6 +97,10 @@ class Mirror:
     def draw_image(self,
                    image: carla.Image,
                    blend: bool = False) -> None:
+        if not self.enabled:
+            self.display.fill((255,255,255))
+            return
+        
         buffer = get_image_as_array(image)
         normal_view = buffer.swapaxes(0, 1)
 

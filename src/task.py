@@ -2,7 +2,7 @@ import math
 import random
 import carla
 
-from typing import Optional, Callable
+from typing import Optional
 
 from src.environment import Environment
 from src.vehicle_factory import VehicleFactory
@@ -91,14 +91,14 @@ class Task:
         vehicle_location = Environment.get_location_relative_to_point(vehicle_waypoint.transform, aside = side_offset)
         new_vehicle_waypoint = self.world.get_map().get_waypoint(vehicle_location, True, carla.LaneType.Driving)
 
-        # debug
         if new_vehicle_waypoint is None:
             return None
             
-        printInfo: Callable[[str, carla.Waypoint], None] = lambda name, wp : print(f"""{name} lane: id = {wp.lane_id}, type = {wp.lane_type}, change = {wp.lane_change}, loc =\t{wp.transform.location.x:.2f}\t{wp.transform.location.y:.2f}""")
-        printInfo('EC', ego_car_waypoint)
-        printInfo('VO', vehicle_waypoint)
-        printInfo('VN', new_vehicle_waypoint)
+        # debug
+        # printInfo: Callable[[str, carla.Waypoint], None] = lambda name, wp : print(f"""{name} lane: id = {wp.lane_id}, type = {wp.lane_type}, change = {wp.lane_change}, loc =\t{wp.transform.location.x:.2f}\t{wp.transform.location.y:.2f}""")
+        # printInfo('EC', ego_car_waypoint)
+        # printInfo('VO', vehicle_waypoint)
+        # printInfo('VN', new_vehicle_waypoint)
         
         vehicle_transform = carla.Transform(vehicle_location, new_vehicle_waypoint.transform.rotation)
         vehicle = vehicle_factory.make_vehicle(False, vehicle_transform)

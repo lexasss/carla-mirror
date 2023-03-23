@@ -107,11 +107,13 @@ class App:
             
             vehicle_factory = VehicleFactory(client)
             ego_car, is_ego_car_created = vehicle_factory.get_ego_car()
-            if is_ego_car_created:
-                self.spawned_actors.append(ego_car)
-                runner = Runner(environment, vehicle_factory, ego_car)
 
             mirror = Mirror(settings, world, ego_car)
+
+            if is_ego_car_created:
+                self.spawned_actors.append(ego_car)
+                runner = Runner(environment, vehicle_factory, ego_car, mirror)
+
             if mirror.camera is not None:
                 self.spawned_actors.append(mirror.camera)
                 

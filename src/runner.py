@@ -8,6 +8,7 @@ from src.environment import Environment
 from src.vehicle_factory import VehicleFactory
 from src.controller import ActionType, Action
 from src.task import Task
+from src.mirror import Mirror
 from src.winapi import Window
 
 TRAFFIC_COUNT = 0
@@ -16,10 +17,12 @@ class Runner:
     def __init__(self,
                  environment: Environment,
                  vehicle_factory: VehicleFactory,
-                 ego_car: carla.Vehicle) -> None:
+                 ego_car: carla.Vehicle,
+                 mirror: Mirror) -> None:
         self.environment = environment
         self.vehicle_factory = vehicle_factory
         self.ego_car = ego_car
+        self.mirror = mirror
 
         self.world = self.vehicle_factory.world
         self.spectator = self.world.get_spectator()
@@ -91,6 +94,8 @@ class Runner:
             if self._blocking_window is not None:
                 self._blocking_window.close()
                 self._blocking_window = None
+            if not self.mirror.enabled:
+                self.mirror.enabled = True
                 
             for vehicle in vehicles:
                 transform = vehicle.get_transform()
@@ -98,7 +103,8 @@ class Runner:
                     self._approaching_vehicle = vehicle.type_id
                     self._next_search_time = time.time() + 3
                     print(f'{vehicle.type_id} {vehicle.get_transform().location} is approaching the ego car {ego_car_snapshot.get_transform().location}')
-                    self._blocking_window = Window()
+                    #self._blocking_window = Window()
+                    self.mirror.enabled = False
                     break
         else:
             self.task.display_info(ego_car_snapshot, f'{self._approaching_vehicle} is approaching the ego car')
