@@ -6,9 +6,21 @@ from typing import Callable, Optional
 
 from src.vehicle_factory import VehicleFactory
 from src.settings import Settings
+from src.offset import Offset
+
 
 class Environment:
     FPS = 30
+    
+    DRIVERS = {
+        'vehicle.lincoln.mkz_2017': Offset(0.10, 0.32, 1.28),
+        'vehicle.toyota.prius': Offset(0.05, 0.34, 1.20),
+        'vehicle.audi.tt': Offset(-0.05, 0.38, 1.20),
+        'vehicle.mercedes.coupe_2020': Offset(0.10, 0.36, 1.15),
+    }
+    
+    # relative to the vehicle's center
+    driver_offset = Offset(0.32, 0.10, 1.28)     # aside (left is positive), forward, up
     
     def __init__(self,
                  client: carla.Client,
@@ -17,13 +29,20 @@ class Environment:
         self.settings = settings
 
     @staticmethod
+    def set_driver_offset(vehicle_type: str):
+        if vehicle_type in Environment.DRIVERS:
+            Environment.driver_offset = Environment.DRIVERS[vehicle_type]
+        else:
+            print(f'The driver for {vehicle_type} is not defined')
+
+    @staticmethod
     def get_location_relative_to_driver(ego_car_snapshot: carla.ActorSnapshot,
                                         forward: float = 0,
                                         aside: float = 0,
                                         upward: float = 0) -> carla.Location:
-        offset_x = 0.32 + aside     # left
-        offset_y = 0.10 + forward
-        offset_z = 1.28 + upward
+        offset_x = Environment.driver_offset.left + aside     # left
+        offset_y = Environment.driver_offset.forward + forward
+        offset_z = Environment.driver_offset.up + upward
 
         ego_car_transform = ego_car_snapshot.get_transform()
         loc = ego_car_transform.location
@@ -40,19 +59,15 @@ class Environment:
     @staticmethod
     def get_location_relative_to_point(transform: carla.Transform,
                                        forward: float = 0,
-                                       aside: float = 0,
+                                       left: float = 0,
                                        upward: float = 0) -> carla.Location:
-        offset_x = 0.32 + aside     # left
-        offset_y = 0.10 + forward
-        offset_z = 1.28 + upward
-
         loc = transform.location
         rot = transform.rotation
 
         return carla.Location(
-            loc.x + offset_x * math.sin(math.radians(rot.yaw)) + offset_y * math.cos(math.radians(rot.yaw)),
-            loc.y - offset_x * math.cos(math.radians(rot.yaw)) + offset_y * math.sin(math.radians(rot.yaw)),
-            loc.z + offset_z)
+            loc.x + left * math.sin(math.radians(rot.yaw)) + forward * math.cos(math.radians(rot.yaw)),
+            loc.y - left * math.cos(math.radians(rot.yaw)) + forward * math.sin(math.radians(rot.yaw)),
+            loc.z + upward)
 
     def load_world(self,
                    town_id: Optional[str]) -> carla.World:

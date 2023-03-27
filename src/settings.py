@@ -33,8 +33,8 @@ def make_args():
     argparser.add_argument(
         '--res',
         metavar='WIDTHxHEIGHT',
-        default='640x480',
-        help='window resolution (default: 640x480)')
+        default='480x320',
+        help='window resolution (default: 480x320)')
     argparser.add_argument(
         '--town',
         default=None,

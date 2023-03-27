@@ -29,6 +29,53 @@ class App:
     
     def __init__(self):
         self.spawned_actors: List[carla.Actor] = []
+        
+        Environment.set_driver_offset(VehicleFactory.EGO_CAR_TYPE)
+        Mirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
+
+    def run(self):
+        settings = Settings()
+
+        pygame.init()
+
+        client = carla.Client(settings.host, 2000)
+        client.set_timeout(5.0)
+        
+        try:
+            environment = Environment(client, settings)
+            world = environment.load_world(settings.town)
+
+        except:
+            print(f'CARLA is not running')
+            mirror = Mirror(settings)
+            self.show_blank_mirror(mirror)
+
+        else:
+            runner: Optional[Runner] = None
+            
+            vehicle_factory = VehicleFactory(client)
+            ego_car, is_ego_car_created = vehicle_factory.get_ego_car()
+
+            mirror = Mirror(settings, world, ego_car)
+
+            if is_ego_car_created:
+                self.spawned_actors.append(ego_car)
+                runner = Runner(environment, vehicle_factory, ego_car, mirror)
+
+            if mirror.camera is not None:
+                self.spawned_actors.append(mirror.camera)
+                
+            # create_traffic(world)      # why they are all crashing if spawned at once when we exit from this script?
+            
+            self.show_carla_mirror(mirror, runner)
+
+        finally:
+            for actor in self.spawned_actors:
+                actor.destroy()
+
+            pygame.quit()
+
+    # Internal
 
     def run_loop(self,
                  sync_mode: CarlaSyncMode,
@@ -84,45 +131,3 @@ class App:
             
             pygame.display.flip()
             clock.tick(Environment.FPS)
-
-    def run(self):
-        settings = Settings()
-
-        pygame.init()
-
-        client = carla.Client(settings.host, 2000)
-        client.set_timeout(5.0)
-        
-        try:
-            environment = Environment(client, settings)
-            world = environment.load_world(settings.town)
-
-        except:
-            print(f'CARLA is not running')
-            mirror = Mirror(settings)
-            self.show_blank_mirror(mirror)
-
-        else:
-            runner: Optional[Runner] = None
-            
-            vehicle_factory = VehicleFactory(client)
-            ego_car, is_ego_car_created = vehicle_factory.get_ego_car()
-
-            mirror = Mirror(settings, world, ego_car)
-
-            if is_ego_car_created:
-                self.spawned_actors.append(ego_car)
-                runner = Runner(environment, vehicle_factory, ego_car, mirror)
-
-            if mirror.camera is not None:
-                self.spawned_actors.append(mirror.camera)
-                
-            # create_traffic(world)      # why they are all crashing if spawned at once when we exit from this script?
-            
-            self.show_carla_mirror(mirror, runner)
-
-        finally:
-            for actor in self.spawned_actors:
-                actor.destroy()
-
-            pygame.quit()

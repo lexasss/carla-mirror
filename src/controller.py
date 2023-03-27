@@ -11,13 +11,14 @@ class ActionType(IntEnum):
     PRINT_INFO = 4
     TOGGLE_NIGHT = 5
     SPAWN_TARGET_NEARBY = 6
+    TOGGLE_MIRROR_DIMMING = 7
     MOUSE = 16
 
 class Action:
     def __init__(self, type: ActionType, param: Optional[str] = None):
         self.type = type
         self.param = param
-        
+
 class Controller:
     SPAWNABLES: List[str] = [
         'bin',
@@ -85,4 +86,6 @@ class Controller:
                     return Action(ActionType.SPAWN_CAR, 'behind')
                 elif event.key == pygame.constants.K_m:
                     return Action(ActionType.SPAWN_CAR, 'random')
+                elif event.key == pygame.constants.K_BACKSLASH:
+                    return Action(ActionType.TOGGLE_MIRROR_DIMMING)
         return None

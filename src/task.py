@@ -88,7 +88,7 @@ class Task:
             elif carla.LaneChange.Right == ego_car_waypoint.lane_change:
                 side_offset = -ego_car_waypoint.lane_width
         
-        vehicle_location = Environment.get_location_relative_to_point(vehicle_waypoint.transform, aside = side_offset)
+        vehicle_location = Environment.get_location_relative_to_point(vehicle_waypoint.transform, left = side_offset)
         new_vehicle_waypoint = self.world.get_map().get_waypoint(vehicle_location, True, carla.LaneType.Driving)
 
         if new_vehicle_waypoint is None:

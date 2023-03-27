@@ -51,18 +51,20 @@ class Runner:
             # self.task.show_direction_to(ego_car_snapshot, search_target)
 
         vehicles = self.world.get_actors().filter('vehicle.*')
-        self.check_traffic_event(cast(List[carla.Vehicle], vehicles), ego_car_snapshot)
+        self._check_traffic_event(cast(List[carla.Vehicle], vehicles), ego_car_snapshot)
         
         # respond to a keypress
         spawned: Optional[carla.Actor] = None
         if action is not None:
-            spawned = self.execute_action(action, ego_car_snapshot)
+            spawned = self._execute_action(action, ego_car_snapshot)
             if spawned is not None:
                 self._search_target = spawned
                 
         return spawned
         
-    def execute_action(self,
+    # Internal
+    
+    def _execute_action(self,
                        action: Action,
                        ego_car_snapshot: carla.ActorSnapshot) -> Optional[carla.Actor]:
         spawned: Optional[carla.Actor] = None
@@ -84,10 +86,12 @@ class Runner:
             self.task.print_closest_waypoint(ego_car_snapshot)
         elif action.type == ActionType.TOGGLE_NIGHT:
             self.task.toiggle_night()
+        elif action.type == ActionType.TOGGLE_MIRROR_DIMMING:
+            self.mirror.toggle_brightness()
     
         return spawned
     
-    def check_traffic_event(self,
+    def _check_traffic_event(self,
                             vehicles: List[carla.Vehicle],
                             ego_car_snapshot: carla.ActorSnapshot) -> None:
         if time.time() > self._next_search_time:
@@ -99,7 +103,7 @@ class Runner:
                 
             for vehicle in vehicles:
                 transform = vehicle.get_transform()
-                if self.is_approaching_from_behind(transform, vehicle.get_velocity(), ego_car_snapshot, 10):
+                if self._is_approaching_from_behind(transform, vehicle.get_velocity(), ego_car_snapshot, 10):
                     self._approaching_vehicle = vehicle.type_id
                     self._next_search_time = time.time() + 3
                     print(f'{vehicle.type_id} {vehicle.get_transform().location} is approaching the ego car {ego_car_snapshot.get_transform().location}')
@@ -109,7 +113,7 @@ class Runner:
         else:
             self.task.display_info(ego_car_snapshot, f'{self._approaching_vehicle} is approaching the ego car')
     
-    def is_approaching_from_behind(self,
+    def _is_approaching_from_behind(self,
                                    transform: carla.Transform,
                                    velocity: carla.Vector3D,
                                    ego_car_snapshot: carla.ActorSnapshot,
