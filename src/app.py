@@ -17,12 +17,15 @@ except ImportError:
 import time
 
 from src.controller import Controller, ActionType
-from src.settings import Settings
+from src.settings import Settings, Side
 from src.runner import Runner
 from src.carla_sync_mode import CarlaSyncMode
 from src.environment import Environment
 from src.vehicle_factory import VehicleFactory
-from src.mirror import Mirror
+from src.mirror.side import SideMirror
+from src.mirror.wideview import WideviewMirror
+from src.mirror.fullscreen import FullscreenMirror
+from src.mirror.base import Mirror
 
 
 class App:
@@ -31,7 +34,8 @@ class App:
         self.spawned_actors: List[carla.Actor] = []
         
         Environment.set_driver_offset(VehicleFactory.EGO_CAR_TYPE)
-        Mirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
+        SideMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
+        FullscreenMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
 
     def run(self):
         settings = Settings()
@@ -47,7 +51,7 @@ class App:
 
         except:
             print(f'CARLA is not running')
-            mirror = Mirror(settings)
+            mirror = self._create_mirror(settings)
             self.show_blank_mirror(mirror)
 
         else:
@@ -56,7 +60,7 @@ class App:
             vehicle_factory = VehicleFactory(client)
             ego_car, is_ego_car_created = vehicle_factory.get_ego_car()
 
-            mirror = Mirror(settings, world, ego_car)
+            mirror = self._create_mirror(settings, world, ego_car)
 
             if is_ego_car_created:
                 self.spawned_actors.append(ego_car)
@@ -101,7 +105,6 @@ class App:
                     self.spawned_actors.append(spawned)
 
             mirror.draw_image(cast(carla.Image, image))
-            mirror.draw_mask()
             
             pygame.display.flip()
             clock.tick(Environment.FPS)
@@ -127,7 +130,15 @@ class App:
                 elif action.type == ActionType.MOUSE:
                     mirror.on_mouse(action.param)
             
-            mirror.draw_mask()
+            mirror.draw_image(None)
             
             pygame.display.flip()
             clock.tick(Environment.FPS)
+
+    def _create_mirror(self, settings: Settings, world: Optional[carla.World] = None, ego_car: Optional[carla.Vehicle] = None) -> Mirror:
+        if settings.side == Side.WIDEVIEW:
+            return WideviewMirror(settings, world, ego_car)
+        elif settings.side == Side.FULLSCREEN:
+            return FullscreenMirror(settings, world, ego_car)
+        else:
+            return SideMirror(settings, world, ego_car)

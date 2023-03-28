@@ -8,8 +8,8 @@ from src.environment import Environment
 from src.vehicle_factory import VehicleFactory
 from src.controller import ActionType, Action
 from src.task import Task
-from src.mirror import Mirror
 from src.winapi import Window
+from src.mirror.base import Mirror
 
 TRAFFIC_COUNT = 0
 

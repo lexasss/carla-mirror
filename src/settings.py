@@ -5,13 +5,24 @@ from enum import Enum
 class Side(Enum):
     LEFT = 'left'
     RIGHT = 'right'
+    WIDEVIEW = 'wideview'
+    FULLSCREEN = 'fullscreen'
 
 class Settings:
     def __init__(self) -> None:
         args = make_args()
         
-        self.width, self.height = [int(x) for x in args.res.split('x')]
-        self.side = Side.LEFT if args.side == Side.LEFT.value else Side.RIGHT
+        self.size = [int(x) for x in args.res.split('x')]
+        if self.size[0] == 0 or self.size[1] == 0:
+            self.size = None
+        if args.side == Side.LEFT.value:
+            self.side = Side.LEFT
+        elif args.side == Side.LEFT.value:
+            self.side = Side.RIGHT
+        elif args.side == Side.WIDEVIEW.value:
+            self.side = Side.WIDEVIEW
+        elif args.side == Side.FULLSCREEN.value:
+            self.side = Side.FULLSCREEN
         self.fov = args.fov
         self.town = args.town
         self.host = args.host
@@ -33,8 +44,8 @@ def make_args():
     argparser.add_argument(
         '--res',
         metavar='WIDTHxHEIGHT',
-        default='480x320',
-        help='window resolution (default: 480x320)')
+        default='0x0',
+        help='window resolution')
     argparser.add_argument(
         '--town',
         default=None,

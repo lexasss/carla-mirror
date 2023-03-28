@@ -5,8 +5,8 @@ import carla
 from typing import Optional, Tuple, cast
 
 class VehicleFactory:
-    #EGO_CAR_TYPE = 'vehicle.lincoln.mkz_2017'
-    EGO_CAR_TYPE = 'vehicle.toyota.prius'
+    EGO_CAR_TYPE = 'vehicle.lincoln.mkz_2017'
+    #EGO_CAR_TYPE = 'vehicle.toyota.prius'
     #EGO_CAR_TYPE = 'vehicle.audi.tt'
     #EGO_CAR_TYPE = 'vehicle.mercedes.coupe_2020'
     
