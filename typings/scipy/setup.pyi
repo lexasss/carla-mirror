@@ -1,0 +1,3 @@
+from typing import Optional
+
+def configuration(parent_package: str = ..., top_path: Optional[str] = ...) -> None: ...

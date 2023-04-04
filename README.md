@@ -19,6 +19,7 @@ It is expected that
 - numpy@1.21
 - pywin32@305
 - pywin32-stubs@1.0
+- jsonpickle@3.0
 
 Maybe it also requires
 
@@ -26,3 +27,6 @@ Maybe it also requires
 - mypy@1.1
 - mypy-extensions@1.0
 - typing_extensions@4.5
+- data-science-types@0.2
+
+- moderngl@5.8

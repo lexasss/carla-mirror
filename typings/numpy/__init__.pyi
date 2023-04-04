@@ -7,7 +7,7 @@ from typing import (Any, Callable, Dict, Generic, Iterator, List, Optional, Sequ
                     TypeVar, Union)
 import numpy
 
-class dtype: 
+class dtype:
     def __init__(self, type: numpy.DtypeType) -> None: ...
     ...
 _dtype = dtype
@@ -49,7 +49,7 @@ OrderType = Union[str, Sequence[str]]
 DtypeType = Union[dtype, type]
 
 class flatiter(Generic[_S], Iterator[_S]):
-    coords: ShapeType = ...
+    coords: ShapeType
     def copy(self) -> flatiter[_S]: ...
 
 class ArrayLike(Generic[_S]):
@@ -226,7 +226,7 @@ class ArrayLike(Generic[_S]):
 
     def view(self, dtype: Optional[DtypeType]=None,
              type: Optional[type]=None) -> 'ArrayLike[Any]': ...
-
+    
     #
     # Magic methods
     #
@@ -444,24 +444,38 @@ class ndarray(ArrayLike[_S], Generic[_S]):
 def array(object: Any, dtype: Any=None, copy: bool=True,
           order: Optional[str]=None, subok: bool=False,
           ndmin: int=0) -> ndarray[Any]: ...
-def asarray(a: Any, dtype: Type[_S]=None, order: Optional[str]=None) -> ndarray[_S]: ...
-def asanyarray(a: Any, dtype: Type[_S]=None, order: Optional[str]=None) -> ndarray[_S]: ...  # TODO figure out a way to restrict the return type
+def asarray(a: Any,
+            dtype: Type[_S]=None,
+            order: Optional[str]=None) -> ndarray[_S]: ...
+def asanyarray(a: Any,
+               dtype: Type[_S]=None,
+               order: Optional[str]=None) -> ndarray[_S]: ...  # TODO figure out a way to restrict the return type
 def asmatrix(data: Any, dtype: Type[_S]=None) -> _S: ...  # TODO define matrix
 def ascontiguousarray(a: Any, dtype: Type[_S]=None) -> ndarray[_S]: ...
 def copy(a: Any, order: Optional[str]=None)	-> ndarray[Any]: ...
 def empty(shape: ShapeType, dtype: Type[_S]=float, order: str='C') -> ndarray[_S]: ...
 def empty_like(a: Any, dtype: Any=None, order: str='K', subok: bool=True) -> ndarray[Any]: ...
 def eye(N: int, M: Optional[int]=None, k: int=0, dtype: Type[_S]=float) -> ndarray[_S]: ...
-def frombuffer(buffer: Any, dtype: Type[_S]=float, count: int=-1,  # TODO figure out a way to restrict buffer
+def frombuffer(buffer: Union[bytes, bytearray, memoryview],
+               dtype: Type[_S]=float,
+               count: int=-1,
                offset: int=0) -> ndarray[_S]: ...
-def fromfile(file: object, dtype: Type[_S]=float, count: int=-1, sep: str='') -> ndarray[_S]: ...  # TODO fix file definition (There's a bug in mypy io's namespace https://github.com/python/mypy/issues/1462)
+def fromfile(file: object,
+             dtype: Type[_S]=float,
+             count: int=-1,
+             sep: str='') -> ndarray[_S]: ...  # TODO fix file definition (There's a bug in mypy io's namespace https://github.com/python/mypy/issues/1462)
 def full(shape: ShapeType, fill_value: Any, dtype: Type[_S]=None,
          order: str='C') -> ndarray[_S]: ...
 def full_like(a: Any, fill_value: Any, dtype: Type[_S]=None, order: str='C',
               subok: bool=True) -> ndarray[_S]: ...
-def fromfunction(function: Callable[..., _S], shape: ShapeType, dtype: DtypeType=float) -> ndarray[_S]: ...
+def fromfunction(function: Callable[..., _S],
+                 shape: ShapeType,
+                 dtype: DtypeType=float) -> ndarray[_S]: ...
 def fromiter(iterable: Iterator[Any], dytpe: DtypeType, count: int=-1) -> ndarray[Any]: ...
-def fromstring(string: str, dtype: Type[_S]=float, count: int=-1, sep: str='') -> ndarray[_S]: ...
+def fromstring(string: str,
+               dtype: Type[_S]=float,
+               count: int=-1,
+               sep: str='') -> ndarray[_S]: ...
 def identity(n: int, dtype: Type[_S]=None) -> ndarray[_S]: ...
 def loadtxt(fname: Any, dtype: DtypeType=float, comments: Union[str, Sequence[str]]='#',
             delimiter: Optional[str]=None, converters: Optional[Dict[int, Callable[[Any], float]]]=None,
@@ -473,6 +487,24 @@ def reshape(array: ndarray[_S], newshape: ShapeType, order: str='C') -> ndarray[
 def zeros(shape: ShapeType, dtype: Type[_S]=float, order: str='C') -> ndarray[_S]: ...
 def zeros_like(a: Any, dtype: Any=None, order: str='K', subok: bool=True) -> ndarray[Any]: ...
 
+def linspace(start: int,
+             stop: int,
+             num: int = 50,
+             endpoint: bool = True,
+             retstep: bool = False,
+             dtype: Optional[dtype] = None,
+             axis: int = 0) -> ArrayLike[Any]: ...
+def meshgrid(*xi: ArrayLike[Any],
+             copy: bool = True,
+             sparse: bool = False,
+             indexing: str = 'xy') -> ArrayLike[Any]: ...
+def arange(start: Union[int, float] = ...,
+           stop: Union[int, float] = ...,
+           step: Union[int, float] = ...,
+           dtype: Optional[dtype] = None,
+           *,
+           like: Optional[ndarray[Any]] = None) -> ArrayLike[Any]: ...
+def dstack(tup: Union[List[Any], Tuple[ArrayLike[Any],...]]) -> ArrayLike[Any]: ...
 
 # Specific values
 inf: float

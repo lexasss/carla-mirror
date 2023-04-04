@@ -12,6 +12,8 @@ from src.winapi import Window
 from src.mirror.base import Mirror
 
 TRAFFIC_COUNT = 0
+BLOCK_MIRROR_ON_CAR_APPROACHING_FROM_BEHIND = False
+BLOCK_MIRROR_WHEN_CAR_BEHIND_IS_AT_DISTANCE = 10
 
 class Runner:
     def __init__(self,
@@ -103,12 +105,12 @@ class Runner:
                 
             for vehicle in vehicles:
                 transform = vehicle.get_transform()
-                if self._is_approaching_from_behind(transform, vehicle.get_velocity(), ego_car_snapshot, 10):
+                if self._is_approaching_from_behind(transform, vehicle.get_velocity(), ego_car_snapshot, BLOCK_MIRROR_WHEN_CAR_BEHIND_IS_AT_DISTANCE):
                     self._approaching_vehicle = vehicle.type_id
                     self._next_search_time = time.time() + 3
                     print(f'{vehicle.type_id} {vehicle.get_transform().location} is approaching the ego car {ego_car_snapshot.get_transform().location}')
                     #self._blocking_window = Window()
-                    self.mirror.enabled = False
+                    self.mirror.enabled = not BLOCK_MIRROR_ON_CAR_APPROACHING_FROM_BEHIND
                     break
         else:
             self.task.display_info(ego_car_snapshot, f'{self._approaching_vehicle} is approaching the ego car')

@@ -26,9 +26,9 @@ class FullscreenMirror(Mirror):
                  vehicle: Optional[carla.Vehicle] = None) -> None:
 
         screen_size = pygame.display.get_desktop_sizes()[0]
-        super().__init__(settings.size or [screen_size[0], screen_size[1]], None, world) 
+        super().__init__(settings.size or [screen_size[0], screen_size[1]], 'fullscreen', None, world) 
 
-        self._display = self._make_display((self.width, self.height), (0, 0))
+        self._display = self._make_display((self.width, self.height))
 
         cam_y, cam_rot = (-FullscreenMirror.camera_offset.left, 180 + FullscreenMirror.CAMERA_YAW) if settings.side == Side.LEFT else (FullscreenMirror.camera_offset.left, 180 - FullscreenMirror.CAMERA_YAW)
         transform = carla.Transform(

@@ -1,0 +1,25 @@
+from typing import Any, Dict, Optional, Callable, Tuple
+
+def encode(data: Dict[str,Any],
+           unpicklable: bool = True,
+           make_refs: bool = True,
+           keys: bool = False,
+           max_depth: Optional[int] = None,
+           reset: bool = True,
+           backend: Any = None,
+           warn: bool = False,
+           context: Any = None,
+           max_iter: Optional[int] = None,
+           use_decimal: bool = False,
+           numeric_keys: bool = False,
+           use_base85: bool = False,
+           fail_safe: Optional[Callable[[], None]] = None,
+           indent: Optional[int] = None,
+           separators: Optional[Tuple[str]] = None) -> str: ...
+def decode(data: str,
+           backend: Any = None,
+           context: Any = None,
+           keys: bool = False,
+           reset: bool = True,
+           safe: bool = False,
+           classes: Any = None) -> Dict[str,Any]: ...

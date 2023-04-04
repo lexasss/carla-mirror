@@ -56,14 +56,15 @@ class VehicleFactory:
         if vehicle_bp.has_attribute('color'):
             color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
             vehicle_bp.set_attribute('color', color)
-        if vehicle_bp.has_attribute('driver_id'):
-            driver_id = random.choice(vehicle_bp.get_attribute('driver_id').recommended_values)
-            vehicle_bp.set_attribute('driver_id', driver_id)
+        # if vehicle_bp.has_attribute('driver_id'):
+        #     driver_id = random.choice(vehicle_bp.get_attribute('driver_id').recommended_values)
+        #     vehicle_bp.set_attribute('driver_id', driver_id)
 
         try:
             vehicle = cast(carla.Vehicle, self.world.spawn_actor(vehicle_bp, transform))
             vehicle.set_autopilot(True)
-        except:
+        except Exception as e:
+            print(e)
             return None
         
         return vehicle

@@ -52,7 +52,7 @@ class App:
         except:
             print(f'CARLA is not running')
             mirror = self._create_mirror(settings)
-            self.show_blank_mirror(mirror)
+            self._show_blank_mirror(mirror)
 
         else:
             runner: Optional[Runner] = None
@@ -71,7 +71,7 @@ class App:
                 
             # create_traffic(world)      # why they are all crashing if spawned at once when we exit from this script?
             
-            self.show_carla_mirror(mirror, runner)
+            self._show_carla_mirror(mirror, runner)
 
         finally:
             for actor in self.spawned_actors:
@@ -81,7 +81,7 @@ class App:
 
     # Internal
 
-    def run_loop(self,
+    def _run_loop(self,
                  sync_mode: CarlaSyncMode,
                  mirror: Mirror,
                  runner: Optional[Runner]):
@@ -109,17 +109,17 @@ class App:
             pygame.display.flip()
             clock.tick(Environment.FPS)
 
-    def show_carla_mirror(self, mirror: Mirror, runner: Optional[Runner] = None):
+    def _show_carla_mirror(self, mirror: Mirror, runner: Optional[Runner] = None):
         try:
             with CarlaSyncMode(cast(carla.World, mirror.world),
                             Environment.FPS,
                             runner is not None,
                             cast(carla.Sensor, mirror.camera)) as sync_mode:     # Create a synchronous mode context.
-                self.run_loop(sync_mode, mirror, runner)
+                self._run_loop(sync_mode, mirror, runner)
         finally:
             time.sleep(0.5)
 
-    def show_blank_mirror(self, mirror: Mirror):
+    def _show_blank_mirror(self, mirror: Mirror):
         clock = pygame.time.Clock()
 
         while True:

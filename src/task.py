@@ -76,9 +76,11 @@ class Task:
         vehicle_waypoint = self.world.get_map().get_waypoint(vehicle_location, True, carla.LaneType.Driving)
 
         if ego_car_waypoint is None or vehicle_waypoint is None:
+            print('No waypoint to spawn the car')
             return None
         
         if abs(ego_car_waypoint.lane_id) != abs(vehicle_waypoint.lane_id):
+            print(f'Lanes are different: {ego_car_waypoint.lane_id} != {vehicle_waypoint.lane_id}')
             return None
 
         side_offset = 0
@@ -89,9 +91,11 @@ class Task:
                 side_offset = -ego_car_waypoint.lane_width
         
         vehicle_location = Environment.get_location_relative_to_point(vehicle_waypoint.transform, left = side_offset)
+        vehicle_location.z += 0.2
         new_vehicle_waypoint = self.world.get_map().get_waypoint(vehicle_location, True, carla.LaneType.Driving)
 
         if new_vehicle_waypoint is None:
+            print('No new waypoint')
             return None
             
         # debug
@@ -105,7 +109,7 @@ class Task:
         
         if vehicle is not None:
             vehicle_factory.configure_traffic_vehicle(vehicle)
-
+            
         return vehicle
     
     def spawn_prop(self, name: str) -> Optional[carla.Actor]:

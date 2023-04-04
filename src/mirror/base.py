@@ -1,8 +1,9 @@
 from src.winapi import Window
+from src.mirror.settings import MirrorSettings
 
 from typing import Optional, Tuple, List, cast
 
-import copy
+# import copy
 import pygame
 import carla
 import win32gui
@@ -20,6 +21,7 @@ class Mirror:
 
     def __init__(self,
                  size: List[int],
+                 side: str,
                  mask_name: Optional[str] = None,
                  world: Optional[carla.World] = None) -> None:
         self.world = world
@@ -36,15 +38,18 @@ class Mirror:
         self._display: pygame.surface.Surface
         self._wnd: Window
         
+        # continue initializing
         self._mask: Optional[pygame.surface.Surface] = None
 
         if mask_name is not None:
             mask = pygame.image.load(f'images/{mask_name}.png')
             self._mask = pygame.transform.scale(mask, (self.width + 1, self.height + 1))  # black lines may be visible at the edges if we do not expand the image by 1 pixels in each dimension
 
+        self._settings = MirrorSettings.create(side)
+    
         self._is_mouse_down: bool = False
         self._mouse_pos: Tuple[int, int] = (0, 0)
-        self._window_pos: Tuple[int, int] = (0, 0)
+        self._window_pos: Tuple[int, int] = (self._settings.x, self._settings.y)
         
         self._brightness = self.brightness
         self._must_scale = False
@@ -75,6 +80,8 @@ class Mirror:
             self._window_pos = self._wnd.get_location()
         elif cmd == 'up' and self._is_mouse_down:
             self._is_mouse_down = False
+            self._settings.x, self._settings.y = self._wnd.get_location()
+            MirrorSettings.save(self._settings)
         elif self._is_mouse_down:
             mouse_x, mouse_y = win32gui.GetCursorPos()
             x = self._window_pos[0] + mouse_x - self._mouse_pos[0]
@@ -83,13 +90,11 @@ class Mirror:
 
     # Internal
 
-    def _make_display(self,
-                     size: Tuple[int, int],
-                     location: Tuple[int, int]) -> pygame.surface.Surface:
-        display = pygame.display.set_mode(size, pygame.constants.HWSURFACE | pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME)
+    def _make_display(self, size: Tuple[int, int]) -> pygame.surface.Surface:
+        display = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME)  # pygame.constants.OPENGL
 
         self._wnd = Window(pygame.display.get_wm_info()['window'])
-        self._wnd.set_location(location[0], location[1])
+        self._wnd.set_location(self._window_pos[0], self._window_pos[1])
 
         if self._mask is not None:
             self._wnd.set_transparent_color(Mirror.MASK_TRANSPARENT_COLOR)
@@ -101,7 +106,8 @@ class Mirror:
                     height: int,
                     fov: float,
                     transform: carla.Transform,
-                    vehicle: carla.Vehicle) -> Optional[carla.Sensor]:
+                    vehicle: carla.Vehicle,
+                    **kwargs: str) -> Optional[carla.Sensor]:
         if self.world is None:
             return None
         
@@ -112,6 +118,10 @@ class Mirror:
         camera_bp.set_attribute('image_size_x', str(width))
         camera_bp.set_attribute('image_size_y', str(height))
         camera_bp.set_attribute('fov', str(fov))
+        
+        for key in kwargs:
+            print(f'{key} = {kwargs[key]}')
+            camera_bp.set_attribute(key, kwargs[key])
         
         return cast(carla.Sensor, self.world.spawn_actor(
             blueprint = camera_bp,
@@ -124,10 +134,15 @@ class Mirror:
         
         # BGR -> RGB (last dimension: takes 3 bytes in reversed order)
         # NOTICE we reverse bytes on the X axis (second dimension): this way we get a mirrored view!
-        array = array[:, ::-1, 2::-1] * self._brightness
+        array = array[:, ::-1, 2::-1]
+        
+        if self._brightness < 1:
+            array = array * self._brightness
+        
+        return array
         
         # make the array writeable doing a deep copy
-        return copy.deepcopy(array)
+        #return copy.deepcopy(array)
         
     def _update_dimming(self):
         if self.brightness < self._brightness:
