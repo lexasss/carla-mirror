@@ -1,5 +1,6 @@
 from src.winapi import Window
 from src.mirror.settings import MirrorSettings
+from src.mirror.opengl_renderer import OpenGLRenderer
 
 from typing import Optional, Tuple, List, cast
 
@@ -12,6 +13,8 @@ try:
     import numpy as np
 except ImportError:
     raise RuntimeError('numpy is not installed')
+
+USE_OPENGL = True
 
 class Mirror:
     MASK_TRANSPARENT_COLOR = (0, 0, 0)
@@ -39,6 +42,8 @@ class Mirror:
         self._wnd: Window
         
         # continue initializing
+        self._display_gl: Optional[OpenGLRenderer] = None
+
         self._mask: Optional[pygame.surface.Surface] = None
 
         if mask_name is not None:
@@ -66,9 +71,22 @@ class Mirror:
             if self._must_scale:
                 image_surface = pygame.transform.scale(image_surface, (self.width, self.height))
             self._display.blit(image_surface, (0, 0))
+        else:
+            MATRIX_SIZE = (20, 5)
+            cell_width = self.width/MATRIX_SIZE[0]
+            cell_height = self.height/MATRIX_SIZE[1]
+            for i in range(MATRIX_SIZE[0]):
+                for j in range(MATRIX_SIZE[1]):
+                    x = (i + 0.5) * cell_width
+                    y = (j + 0.5) * cell_height
+                    pygame.draw.circle(self._display, (255,0,255), (x,y), 10)
 
         if self._mask is not None:
             self._display.blit(self._mask, (-1, -1))    # there is a 1-pixel black line on the left and top remained visible if we set the origin to 0,0, thus now it is -1,-1
+
+        if self._display_gl is not None:
+            texture_data = self._display.get_view('1')
+            self._display_gl.render(texture_data)
 
     def toggle_brightness(self):
         self.brightness = 1.0 + Mirror.MIN_BRIGHTNESS - self.brightness
@@ -91,7 +109,13 @@ class Mirror:
     # Internal
 
     def _make_display(self, size: Tuple[int, int]) -> pygame.surface.Surface:
-        display = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME)  # pygame.constants.OPENGL
+        if USE_OPENGL:
+            self._display_gl = OpenGLRenderer(size, 'zoom_x')
+            display = self._display_gl.screen
+        else:
+            display = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME)
+
+        # display = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME | pygame.constants.OPENGL).convert((0xff, 0xff00, 0xff0000, 0))  # pygame.constants.OPENGL
 
         self._wnd = Window(pygame.display.get_wm_info()['window'])
         self._wnd.set_location(self._window_pos[0], self._window_pos[1])
