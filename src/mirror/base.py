@@ -14,8 +14,6 @@ try:
 except ImportError:
     raise RuntimeError('numpy is not installed')
 
-USE_OPENGL = True
-
 class Mirror:
     MASK_TRANSPARENT_COLOR = (0, 0, 0)
     MIN_BRIGHTNESS = 0.3
@@ -26,13 +24,17 @@ class Mirror:
                  size: List[int],
                  side: str,
                  mask_name: Optional[str] = None,
-                 world: Optional[carla.World] = None) -> None:
+                 world: Optional[carla.World] = None,
+                 shader: Optional[str] = None,
+                 is_camera: bool = False) -> None:
         self.world = world
         self.width = size[0]
         self.height = size[1]
         
         self.enabled = True
         self.brightness = 1.0
+        self.shader = shader
+        self.is_camera = is_camera
         
         # Internal
         
@@ -72,6 +74,7 @@ class Mirror:
                 image_surface = pygame.transform.scale(image_surface, (self.width, self.height))
             self._display.blit(image_surface, (0, 0))
         else:
+            # draw a matrix of circles, so we can inpect how the view is distorted in the shader
             MATRIX_SIZE = (20, 5)
             cell_width = self.width/MATRIX_SIZE[0]
             cell_height = self.height/MATRIX_SIZE[1]
@@ -109,13 +112,14 @@ class Mirror:
     # Internal
 
     def _make_display(self, size: Tuple[int, int]) -> pygame.surface.Surface:
-        if USE_OPENGL:
-            self._display_gl = OpenGLRenderer(size, 'zoom_x')
+        if self.shader is not None:
+            self._display_gl = OpenGLRenderer(size, self.shader)
             display = self._display_gl.screen
         else:
             display = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME)
 
-        # display = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME | pygame.constants.OPENGL).convert((0xff, 0xff00, 0xff0000, 0))  # pygame.constants.OPENGL
+        icon = pygame.image.load('images/icon.png')
+        pygame.display.set_icon(icon)
 
         self._wnd = Window(pygame.display.get_wm_info()['window'])
         self._wnd.set_location(self._window_pos[0], self._window_pos[1])
@@ -157,8 +161,11 @@ class Mirror:
         array = np.reshape(array_one_dim, (image.height, image.width, 4))
         
         # BGR -> RGB (last dimension: takes 3 bytes in reversed order)
-        # NOTICE we reverse bytes on the X axis (second dimension): this way we get a mirrored view!
-        array = array[:, ::-1, 2::-1]
+        if self.is_camera:
+            array = array[:, :, 2::-1]
+        else:
+            # NOTICE we reverse bytes on the X axis (second dimension): this way we get a mirrored view!
+            array = array[:, ::-1, 2::-1]
         
         if self._brightness < 1:
             array = array * self._brightness

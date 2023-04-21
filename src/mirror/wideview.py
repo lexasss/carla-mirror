@@ -17,14 +17,14 @@ from src.mirror.base import Mirror
 
 class WideviewMirror(Mirror):
     CAMERAS_Z = {
-        'vehicle.lincoln.mkz_2017': 1.5,
+        'vehicle.lincoln.mkz_2017': 1.8,
         'vehicle.toyota.prius': 1.5,
         'vehicle.audi.tt': 1.5,
         'vehicle.mercedes.coupe_2020': 1.5,
     }
 
-    CAMERA_PITCH = -4
-    APPLY_DISTORTION = True
+    CAMERA_PITCH = -6       # slightly downward
+    CAMERA_X = 0.5
     
     camera_z = 1.8
     
@@ -33,7 +33,7 @@ class WideviewMirror(Mirror):
                  world: Optional[carla.World] = None,
                  vehicle: Optional[carla.Vehicle] = None) -> None:
 
-        super().__init__(settings.size or [960, 240], 'wideview', 'wideview_mirror', world) 
+        super().__init__(settings.size or [960, 240], 'wideview', 'wideview_mirror', world, 'zoom_x') 
 
         if not self._settings.is_initialized():
             screen_size = pygame.display.get_desktop_sizes()[0]
@@ -42,7 +42,7 @@ class WideviewMirror(Mirror):
         self._display = self._make_display((self.width, self.height))
 
         transform = carla.Transform(
-            carla.Location(z = WideviewMirror.camera_z),
+            carla.Location(x = WideviewMirror.CAMERA_X, z = WideviewMirror.camera_z),
             carla.Rotation(pitch = WideviewMirror.CAMERA_PITCH, yaw = 180)
         )
         self.camera = self._make_camera(self.width, self.height, settings.fov, transform, vehicle) if vehicle is not None else None
@@ -54,7 +54,7 @@ class WideviewMirror(Mirror):
     @staticmethod
     def set_camera_offset(vehicle_type: str):
         if vehicle_type in WideviewMirror.CAMERAS_Z:
-            WideviewMirror.camera_offset = WideviewMirror.CAMERAS_Z[vehicle_type]
+            WideviewMirror.camera_z = WideviewMirror.CAMERAS_Z[vehicle_type]
         else:
             print(f'The camera for {vehicle_type} is not defined')
 

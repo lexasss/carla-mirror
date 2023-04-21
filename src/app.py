@@ -24,6 +24,7 @@ from src.environment import Environment
 from src.vehicle_factory import VehicleFactory
 from src.mirror.side import SideMirror
 from src.mirror.wideview import WideviewMirror
+from src.mirror.top_view import TopViewMirror
 from src.mirror.fullscreen import FullscreenMirror
 from src.mirror.base import Mirror
 
@@ -36,6 +37,7 @@ class App:
         Environment.set_driver_offset(VehicleFactory.EGO_CAR_TYPE)
         SideMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
         FullscreenMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
+        WideviewMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
 
     def run(self):
         settings = Settings()
@@ -138,6 +140,8 @@ class App:
     def _create_mirror(self, settings: Settings, world: Optional[carla.World] = None, ego_car: Optional[carla.Vehicle] = None) -> Mirror:
         if settings.side == Side.WIDEVIEW:
             return WideviewMirror(settings, world, ego_car)
+        elif settings.side == Side.TOPVIEW:
+            return TopViewMirror(settings, world, ego_car)
         elif settings.side == Side.FULLSCREEN:
             return FullscreenMirror(settings, world, ego_car)
         else:

@@ -6,6 +6,7 @@ class Side(Enum):
     LEFT = 'left'
     RIGHT = 'right'
     WIDEVIEW = 'wideview'
+    TOPVIEW = 'topview' 
     FULLSCREEN = 'fullscreen'
 
 class Settings:
@@ -13,19 +14,18 @@ class Settings:
         args = make_args()
         
         self.size = [int(x) for x in args.res.split('x')]
-        if self.size[0] == 0 or self.size[1] == 0:
-            self.size = None
-        if args.side == Side.LEFT.value:
-            self.side = Side.LEFT
-        elif args.side == Side.LEFT.value:
-            self.side = Side.RIGHT
-        elif args.side == Side.WIDEVIEW.value:
-            self.side = Side.WIDEVIEW
-        elif args.side == Side.FULLSCREEN.value:
-            self.side = Side.FULLSCREEN
         self.fov = args.fov
         self.town = args.town
         self.host = args.host
+
+        if self.size[0] == 0 or self.size[1] == 0:
+            self.size = None
+        for side in list(Side):
+            if args.side == side.value:
+                self.side = side
+                break
+        else:
+            self.side = Side.LEFT
 
 
 def make_args():
@@ -34,7 +34,7 @@ def make_args():
     argparser.add_argument(
         '--side',
         default=Side.LEFT.value,
-        choices=[x.value for x in list(Side)],
+        choices=[side.value for side in list(Side)],
         help='location of the mirror')
     argparser.add_argument(
         '--fov',

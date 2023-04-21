@@ -33,8 +33,8 @@ class OpenGLRenderer:
 
         self.vao = ctx.vertex_array(prog, vao_content, ibo) # pyright: ignore
         self.screen = screen
-        self.ctx = ctx
         self.screen_texture = screen_texture
+        #self.ctx = ctx
 
 
     def render(self, texture_data: Any):
