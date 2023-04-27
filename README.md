@@ -14,19 +14,27 @@ It is expected that
 
 ## Requires
 
+### pip
+
 - python@3.7
 - pygame@2.2
 - numpy@1.21
 - pywin32@305
 - pywin32-stubs@1.0
 - jsonpickle@3.0
+- moderngl@5.8
 
-Maybe it also requires
+### external
+
+- [glslViewer](https://github.com/patriciogonzalezvivo/glslViewer) to inspect the shader (`glslViewer ./shaders/zoom_x.frag "path/to/some/image.png"`)
+- [glslang@12.1](https://github.com/KhronosGroup/glslang) for GLSL Linter extension to be set in `Validator Path` in its settings
+
+May also require
+
+### pip
 
 - Pillow@9.4
 - mypy@1.1
 - mypy-extensions@1.0
 - typing_extensions@4.5
 - data-science-types@0.2
-
-- moderngl@5.8

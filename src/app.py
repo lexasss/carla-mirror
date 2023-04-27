@@ -96,7 +96,7 @@ class App:
                 if action.type == ActionType.QUIT:
                     break
                 elif action.type == ActionType.MOUSE:
-                    mirror.on_mouse(action.param)
+                    mirror.on_mouse(cast(str, action.param))
 
             # Advance the simulation and wait for the data.
             snapshot, image = sync_mode.tick(timeout = 5.0)
@@ -130,7 +130,7 @@ class App:
                 if action.type == ActionType.QUIT:
                     break
                 elif action.type == ActionType.MOUSE:
-                    mirror.on_mouse(action.param)
+                    mirror.on_mouse(cast(str, action.param))
             
             mirror.draw_image(None)
             

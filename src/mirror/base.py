@@ -94,7 +94,7 @@ class Mirror:
     def toggle_brightness(self):
         self.brightness = 1.0 + Mirror.MIN_BRIGHTNESS - self.brightness
 
-    def on_mouse(self, cmd: Optional[str]) -> None:
+    def on_mouse(self, cmd: str) -> None:
         if cmd == 'down' and not self._is_mouse_down:
             self._is_mouse_down = True
             self._mouse_pos = win32gui.GetCursorPos()
@@ -108,12 +108,23 @@ class Mirror:
             x = self._window_pos[0] + mouse_x - self._mouse_pos[0]
             y = self._window_pos[1] + mouse_y - self._mouse_pos[1]
             self._wnd.set_location(x, y)
+        elif cmd.startswith('move'):
+            if self._display_gl is not None:
+                a = [float(x) for x in cmd[4:].split(',')]
+                self._display_gl.mouse = (self.width - a[0]), a[1]
+        elif cmd == 'scroll_up':
+            if self._display_gl is not None:
+                self._display_gl.zoomIn()
+        elif cmd == 'scroll_down':
+            if self._display_gl is not None:
+                self._display_gl.zoomOut()
+                
 
     # Internal
 
     def _make_display(self, size: Tuple[int, int]) -> pygame.surface.Surface:
         if self.shader is not None:
-            self._display_gl = OpenGLRenderer(size, self.shader)
+            self._display_gl = OpenGLRenderer(size, self.shader, self.world is None)
             display = self._display_gl.screen
         else:
             display = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME)

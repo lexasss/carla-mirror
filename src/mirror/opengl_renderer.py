@@ -1,23 +1,26 @@
-from typing import Tuple, Any
+from typing import Tuple, Set, Any
+from datetime import datetime
 
 import pygame
 import struct
 import moderngl
 
+SHADER_CONTROL_WITH_MOUSE = False
+
 class OpenGLRenderer:
-    def __init__(self, size: Tuple[int,int], shader_name: str = ''):
+    def __init__(self, size: Tuple[int,int], shader_name: str = '', display_check_matrix: bool = False):
         screen = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.OPENGL | pygame.constants.NOFRAME ).convert((0xff, 0xff00, 0xff0000, 0))
         ctx = moderngl.create_context()
 
         texture_coordinates = [0, 1,  1, 1,  0, 0,  1, 0]
         world_coordinates = [-1, -1,  1, -1,  -1,  1,  1,  1]
-        render_indices = [0, 1, 2, 1, 2, 3]
+        render_indices = [0, 1, 2,  1, 2, 3]
                   
         prog = ctx.program(
-            vertex_shader = open(f'shaders/vert_{shader_name}.glsl').read(),
-            fragment_shader = open(f'shaders/frag_{shader_name}.glsl').read()
+            vertex_shader = open(f'shaders/{shader_name}.vert').read(),
+            fragment_shader = open(f'shaders/{shader_name}.frag').read()
         )
-
+        
         screen_texture = ctx.texture(size, 3, pygame.image.tostring(screen, 'RGB'))
         screen_texture.repeat_x = False
         screen_texture.repeat_y = False
@@ -27,18 +30,60 @@ class OpenGLRenderer:
         ibo = ctx.buffer(struct.pack('6I', *render_indices))
 
         vao_content = [
-            (vbo, '2f', 'vert'),
-            (uvmap, '2f', 'in_text')
+            (vbo, '2f', 'in_coords'),
+            (uvmap, '2f', 'in_uv')
         ]
 
-        self.vao = ctx.vertex_array(prog, vao_content, ibo) # pyright: ignore
+        self._vao = ctx.vertex_array(prog, vao_content, ibo) # pyright: ignore
+        self._screen_texture = screen_texture
+        self._prog = prog
+        
+        self._zoom = 0.5
+        self._timestamp = datetime.now().timestamp()
+
         self.screen = screen
-        self.screen_texture = screen_texture
+
+        self.mouse = 0.0, 0.0
+        
         #self.ctx = ctx
 
+        self._glsl_uniforms: Set[str] = set()
+        self._injectUniform(size, display_check_matrix)
+        
+    def zoomIn(self):
+        self._zoom += 0.1
+
+    def zoomOut(self):
+        self._zoom -= 0.1
 
     def render(self, texture_data: Any):
-        self.screen_texture.write(texture_data)
-        self.screen_texture.use()
-        self.vao.render()
+        if SHADER_CONTROL_WITH_MOUSE:
+            if ('u_time' in self._glsl_uniforms):
+                self._prog['u_time'] = datetime.now().timestamp() - self._timestamp
+            if ('u_mouse' in self._glsl_uniforms):
+                self._prog['u_mouse'] = self.mouse
+            if ('u_zoom' in self._glsl_uniforms):
+                self._prog['u_zoom'] = self._zoom
+        
+        self._screen_texture.write(texture_data)
+        self._screen_texture.use()
+        self._vao.render()
+        
+    # Internal
 
+    def _injectUniform(self, size: Tuple[int,int], colorize: bool):
+        for name in self._prog:
+            member = self._prog[name]
+            if isinstance(member, moderngl.Uniform):
+                self._glsl_uniforms.add(name)
+                print(f'{member.location}: uniform [{member.dimension}] {name}')
+            elif isinstance(member, moderngl.Attribute):
+                self._glsl_uniforms.add(name)
+                print(f'{member.location}: in [{member.dimension}] {name}')
+        
+        if SHADER_CONTROL_WITH_MOUSE:
+            if ('u_resolution' in self._glsl_uniforms):
+                self._prog['u_resolution'] = size
+            if ('u_colorize' in self._glsl_uniforms):
+                self._prog['u_colorize'] = colorize
+        

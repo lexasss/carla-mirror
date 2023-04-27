@@ -13,6 +13,7 @@ class ActionType(IntEnum):
     SPAWN_TARGET_NEARBY = 6
     TOGGLE_MIRROR_DIMMING = 7
     MOUSE = 16
+    MOUSEMOVE = 17
 
 class Action:
     def __init__(self, type: ActionType, param: Optional[str] = None):
@@ -42,11 +43,20 @@ class Controller:
             if event.type == pygame.constants.QUIT:
                 return Action(ActionType.QUIT)
             elif event.type == pygame.constants.MOUSEBUTTONDOWN:
-                return Action(ActionType.MOUSE, 'down')
-            elif event.type == pygame.constants.MOUSEMOTION:
-                return Action(ActionType.MOUSE, 'move')
+                if event.button == pygame.constants.BUTTON_LEFT:
+                    return Action(ActionType.MOUSE, 'down')
+                elif event.button == pygame.constants.BUTTON_WHEELDOWN:
+                    return Action(ActionType.MOUSE, 'scroll_down')
             elif event.type == pygame.constants.MOUSEBUTTONUP:
-                return Action(ActionType.MOUSE, 'up')
+                if event.button == pygame.constants.BUTTON_LEFT:
+                    return Action(ActionType.MOUSE, 'up')
+                elif event.button == pygame.constants.BUTTON_WHEELUP:
+                    return Action(ActionType.MOUSE, 'scroll_up')
+            elif event.type == pygame.constants.MOUSEMOTION:
+                mouse = pygame.mouse.get_pos()
+                return Action(ActionType.MOUSE, f'move{mouse[0]},{mouse[1]}')
+            elif event.type == pygame.constants.MOUSEWHEEL:
+               print(event)
             elif event.type == pygame.constants.KEYUP:
                 if event.key == pygame.constants.K_ESCAPE:
                     return Action(ActionType.QUIT)
