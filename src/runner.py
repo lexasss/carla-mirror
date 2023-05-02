@@ -10,6 +10,7 @@ from src.controller import ActionType, Action
 from src.task import Task
 from src.winapi import Window
 from src.mirror.base import Mirror
+from src.logging import Logger
 
 TRAFFIC_COUNT = 0
 BLOCK_MIRROR_ON_CAR_APPROACHING_FROM_BEHIND = False
@@ -34,6 +35,8 @@ class Runner:
         self._next_search_time: float = 0
         self._approaching_vehicle: Optional[str] = None
         self._blocking_window: Optional[Window] = None
+        
+        self._logger = Logger('spawner')
 
     def make_step(self,
                   world_snapshot: carla.WorldSnapshot,
@@ -74,11 +77,9 @@ class Runner:
         if action.type == ActionType.SPAWN_TARGET:
             if action.param is not None:
                 spawned = self.task.spawn_prop(action.param)
-                print('Target created')
         if action.type == ActionType.SPAWN_TARGET_NEARBY:
             if action.param is not None:
                 spawned = self.task.spawn_prop_nearby(action.param, ego_car_snapshot)
-                print('Target created')
         elif action.type == ActionType.SPAWN_CAR:
             if action.param == 'random':
                 spawned = self.task.spawn_vehicle(ego_car_snapshot, self.vehicle_factory)
@@ -90,7 +91,10 @@ class Runner:
             self.task.toiggle_night()
         elif action.type == ActionType.TOGGLE_MIRROR_DIMMING:
             self.mirror.toggle_brightness()
-    
+
+        if spawned is not None:    
+            self._logger.log(action.type, spawned.type_id)
+                
         return spawned
     
     def _check_traffic_event(self,

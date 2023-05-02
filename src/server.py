@@ -1,0 +1,76 @@
+import logging
+import queue
+import asyncio, threading
+
+from websockets.exceptions import ConnectionClosedOK            # pyright: ignore
+from websockets.server import serve, WebSocketServerProtocol    # pyright: ignore
+from typing import Callable, Set, Optional, cast
+
+class Server:
+    def __init__(self, cb: Callable[..., None]):
+        self._isRunning = True
+        self._cb = cb
+        
+        self._requests: queue.Queue[str] = queue.Queue()
+        self._responses: queue.Queue[str] = queue.Queue()
+        
+        self._clients: Set[WebSocketServerProtocol] = set()
+        
+        self._thread = threading.Thread(target = self._start)
+        self._thread.start()
+        
+    def close(self):
+        self._isRunning = False
+        self._thread.join()
+        
+    def send(self, msg: str):
+        self._responses.put(msg)
+        
+    def _start(self):
+        print('Server started')
+
+        try:
+            asyncio.run(self.run_server())
+        except Exception:
+            logging.exception('start: asyncio.run')
+
+        print('Server closed')
+        
+    async def _client_connected(self, ws: WebSocketServerProtocol):
+        print('Client connected')
+        
+        self._clients.add(ws)
+        
+        while self._isRunning and not ws.closed:
+            message: Optional[str] = None
+            try:
+                message = cast(str, await ws.recv())
+            except ConnectionClosedOK:
+                pass
+            except:
+                logging.exception('_client_connected: await ws.recv()')
+        
+            if message is not None:
+                self._requests.put(message)
+                
+        self._clients.discard(ws)
+        
+        print('Client diconnected')
+            
+    async def run_server(self):
+        async with serve(self._client_connected, "localhost", 15555):
+            while self._isRunning:
+
+                while self._responses.qsize() > 0:
+                    msg = self._responses.get()
+                    for client in self._clients:
+                        await client.send(msg)
+
+                while self._requests.qsize() > 0:
+                    try:
+                        msg = self._requests.get()
+                        self._cb(msg)
+                    except:
+                        pass
+                    
+                await asyncio.sleep(0.1)

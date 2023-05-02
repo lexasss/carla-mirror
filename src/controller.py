@@ -1,6 +1,6 @@
 import pygame
 
-from typing import List, Optional
+from typing import Dict, Optional
 from enum import IntEnum
 
 class ActionType(IntEnum):
@@ -21,21 +21,28 @@ class Action:
         self.param = param
 
 class Controller:
-    SPAWNABLES: List[str] = [
-        'bin',
-        'barrel',
-        'clothcontainer',
-        'trashcan01',
-        'plastictable',
-        'slide',
-        'trampoline',
-        'travelcase',
-        'trafficcone01',
-        'kiosk_01',
-        'advertisement',
-        'mailbox',
-        'vendingmachine',
-    ]
+    SHORTCUTS: Dict[int, Action] = {
+        pygame.constants.K_ESCAPE: Action(ActionType.QUIT),
+        pygame.constants.K_1: Action(ActionType.SPAWN_TARGET, 'bin'),
+        pygame.constants.K_2: Action(ActionType.SPAWN_TARGET, 'barrel'),
+        pygame.constants.K_3: Action(ActionType.SPAWN_TARGET, 'clothcontainer'),
+        pygame.constants.K_4: Action(ActionType.SPAWN_TARGET, 'trashcan01'),
+        pygame.constants.K_5: Action(ActionType.SPAWN_TARGET, 'plastictable'),
+        pygame.constants.K_6: Action(ActionType.SPAWN_TARGET, 'slide'),
+        pygame.constants.K_7: Action(ActionType.SPAWN_TARGET, 'trampoline'),
+        pygame.constants.K_8: Action(ActionType.SPAWN_TARGET, 'travelcase'),
+        pygame.constants.K_9: Action(ActionType.SPAWN_TARGET, 'travelcase'),
+        pygame.constants.K_0: Action(ActionType.SPAWN_TARGET, 'trafficcone01'),
+        pygame.constants.K_q: Action(ActionType.SPAWN_TARGET, 'kiosk_01'),
+        pygame.constants.K_w: Action(ActionType.SPAWN_TARGET, 'advertisement'),
+        pygame.constants.K_e: Action(ActionType.SPAWN_TARGET, 'mailbox'),
+        pygame.constants.K_p: Action(ActionType.SPAWN_TARGET_NEARBY, 'cottage'),
+        pygame.constants.K_x: Action(ActionType.PRINT_INFO),
+        pygame.constants.K_c: Action(ActionType.TOGGLE_NIGHT),
+        pygame.constants.K_n: Action(ActionType.SPAWN_CAR, 'behind'),
+        pygame.constants.K_m: Action(ActionType.SPAWN_CAR, 'random'),
+        pygame.constants.K_BACKSLASH: Action(ActionType.TOGGLE_MIRROR_DIMMING)
+    }
     
     @staticmethod
     def get_input() -> Optional[Action]:
@@ -58,44 +65,6 @@ class Controller:
             elif event.type == pygame.constants.MOUSEWHEEL:
                print(event)
             elif event.type == pygame.constants.KEYUP:
-                if event.key == pygame.constants.K_ESCAPE:
-                    return Action(ActionType.QUIT)
-                elif event.key == pygame.constants.K_1:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[0])
-                elif event.key == pygame.constants.K_2:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[1])
-                elif event.key == pygame.constants.K_3:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[2])
-                elif event.key == pygame.constants.K_4:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[3])
-                elif event.key == pygame.constants.K_5:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[4])
-                elif event.key == pygame.constants.K_6:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[5])
-                elif event.key == pygame.constants.K_7:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[6])
-                elif event.key == pygame.constants.K_8:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[7])
-                elif event.key == pygame.constants.K_9:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[8])
-                elif event.key == pygame.constants.K_0:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[9])
-                elif event.key == pygame.constants.K_q:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[10])
-                elif event.key == pygame.constants.K_w:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[11])
-                elif event.key == pygame.constants.K_e:
-                    return Action(ActionType.SPAWN_TARGET, Controller.SPAWNABLES[12])
-                elif event.key == pygame.constants.K_p:
-                    return Action(ActionType.SPAWN_TARGET_NEARBY, 'cottage')
-                elif event.key == pygame.constants.K_x:
-                    return Action(ActionType.PRINT_INFO)
-                elif event.key == pygame.constants.K_c:
-                    return Action(ActionType.TOGGLE_NIGHT)
-                elif event.key == pygame.constants.K_n:
-                    return Action(ActionType.SPAWN_CAR, 'behind')
-                elif event.key == pygame.constants.K_m:
-                    return Action(ActionType.SPAWN_CAR, 'random')
-                elif event.key == pygame.constants.K_BACKSLASH:
-                    return Action(ActionType.TOGGLE_MIRROR_DIMMING)
+                if event.key in Controller.SHORTCUTS:
+                    return Controller.SHORTCUTS[event.key]
         return None

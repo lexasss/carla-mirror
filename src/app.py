@@ -27,18 +27,21 @@ from src.mirror.wideview import WideviewMirror
 from src.mirror.top_view import TopViewMirror
 from src.mirror.fullscreen import FullscreenMirror
 from src.mirror.base import Mirror
-
+from src.logging import Logger
+from src.remote import Remote
 
 class App:
     
     def __init__(self):
-        self.spawned_actors: List[carla.Actor] = []
+        self._spawned_actors: List[carla.Actor] = []
         
+        self._logger = Logger('app')
+
         Environment.set_driver_offset(VehicleFactory.EGO_CAR_TYPE)
         SideMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
         FullscreenMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
         WideviewMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
-
+        
     def run(self):
         settings = Settings()
 
@@ -46,6 +49,8 @@ class App:
 
         client = carla.Client(settings.host, 2000)
         client.set_timeout(5.0)
+        
+        remote = Remote()
         
         try:
             environment = Environment(client, settings)
@@ -63,22 +68,26 @@ class App:
             ego_car, is_ego_car_created = vehicle_factory.get_ego_car()
 
             mirror = self._create_mirror(settings, world, ego_car)
+            self._logger.log('mirror', settings.side)
 
             if is_ego_car_created:
-                self.spawned_actors.append(ego_car)
+                self._spawned_actors.append(ego_car)
+                self._logger.log('car', ego_car.type_id)
                 runner = Runner(environment, vehicle_factory, ego_car, mirror)
 
             if mirror.camera is not None:
-                self.spawned_actors.append(mirror.camera)
+                self._spawned_actors.append(mirror.camera)
                 
             # create_traffic(world)      # why they are all crashing if spawned at once when we exit from this script?
             
             self._show_carla_mirror(mirror, runner)
 
         finally:
-            for actor in self.spawned_actors:
+            for actor in self._spawned_actors:
                 actor.destroy()
 
+            remote.close()
+            
             pygame.quit()
 
     # Internal
@@ -104,7 +113,7 @@ class App:
             if runner is not None:
                 spawned = runner.make_step(cast(carla.WorldSnapshot, snapshot), action)
                 if spawned is not None:
-                    self.spawned_actors.append(spawned)
+                    self._spawned_actors.append(spawned)
 
             mirror.draw_image(cast(carla.Image, image))
             

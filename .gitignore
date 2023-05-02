@@ -163,3 +163,4 @@ cython_debug/
 .vscode
 mirror_settings.json
 *.xlsx
+logs/**
