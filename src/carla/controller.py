@@ -4,10 +4,10 @@ import carla
 
 from typing import Optional
 
-from src.environment import Environment
-from src.vehicle_factory import VehicleFactory
+from src.carla.environment import CarlaEnvironment
+from src.carla.vehicle_factory import VehicleFactory
 
-class Task:
+class CarlaController:
     def __init__(self, world: carla.World) -> None:
         self.world = world
         self.debug = world.debug
@@ -22,7 +22,7 @@ class Task:
         loc = transform.location
         dist = loc.distance(target.get_location())
         
-        location = Environment.get_location_relative_to_driver(ego_car_snapshot, 0.9, 0.07, -0.28)
+        location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, 0.9, 0.07, -0.28)
 
         name = target.type_id.split('.')[2]
         self.debug.draw_string(location, f'Distance to the {name}: {dist:.2f} m', color = carla.Color(0, 255, 255))
@@ -30,15 +30,15 @@ class Task:
     def display_speed(self, ego_car_snapshot: carla.ActorSnapshot) -> None:
         vector = ego_car_snapshot.get_velocity()
         speed = 3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2)
-        display_location = Environment.get_location_relative_to_driver(ego_car_snapshot, 0.9, 0.07, -0.30)
+        display_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, 0.9, 0.07, -0.30)
         self.debug.draw_string(display_location, f'{speed:.2f} km/h', color = carla.Color(255, 255, 0))
 
     def display_info(self, ego_car_snapshot: carla.ActorSnapshot, text: str) -> None:
-        display_location = Environment.get_location_relative_to_driver(ego_car_snapshot, 0.9, 0.07, -0.32)
+        display_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, 0.9, 0.07, -0.32)
         self.debug.draw_string(display_location, text, color = carla.Color(255, 128, 128), life_time = -1)
 
     def display_direction_to(self, ego_car_snapshot: carla.ActorSnapshot, actor: carla.Actor) -> None:
-        ego_car_location = Environment.get_location_relative_to_driver(ego_car_snapshot, forward = 3, aside = 0.05, upward = -0.26)
+        ego_car_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, forward = 3, aside = 0.05, upward = -0.26)
         
         # draw_arrow and draw_line are buggy, they do not remove the arrow/line after "life_time" period
         self.debug.draw_arrow(ego_car_location, actor.get_location(), 0.005, color = carla.Color(0, 255, 255), life_time = -1)
@@ -72,7 +72,7 @@ class Task:
         ego_car_tranform = ego_car_snapshot.get_transform()
         ego_car_waypoint = self.world.get_map().get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
         
-        vehicle_location = Environment.get_location_relative_to_driver(ego_car_snapshot, -distance)
+        vehicle_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, -distance)
         vehicle_waypoint = self.world.get_map().get_waypoint(vehicle_location, True, carla.LaneType.Driving)
 
         if ego_car_waypoint is None or vehicle_waypoint is None:
@@ -90,7 +90,7 @@ class Task:
             elif carla.LaneChange.Right == ego_car_waypoint.lane_change:
                 side_offset = -ego_car_waypoint.lane_width
         
-        vehicle_location = Environment.get_location_relative_to_point(vehicle_waypoint.transform, left = side_offset)
+        vehicle_location = CarlaEnvironment.get_location_relative_to_point(vehicle_waypoint.transform, left = side_offset)
         vehicle_location.z += 0.2
         new_vehicle_waypoint = self.world.get_map().get_waypoint(vehicle_location, True, carla.LaneType.Driving)
 

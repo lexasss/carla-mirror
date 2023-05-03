@@ -1,16 +1,22 @@
 import carla
 import math
 import time
+import random
 
-from typing import Optional, List, cast
+from typing import Optional, List, Tuple, cast
+from queue import SimpleQueue
 
-from src.environment import Environment
-from src.vehicle_factory import VehicleFactory
-from src.controller import ActionType, Action
-from src.task import Task
+from src.user_action import ActionType, Action, DriverTask
 from src.winapi import Window
+
 from src.mirror.base import Mirror
-from src.logging import Logger
+
+from src.carla.environment import CarlaEnvironment
+from src.carla.vehicle_factory import VehicleFactory
+from src.carla.controller import CarlaController
+
+from src.exp.logging import Logger
+from src.exp.remote import Remote
 
 TRAFFIC_COUNT = 0
 BLOCK_MIRROR_ON_CAR_APPROACHING_FROM_BEHIND = False
@@ -18,7 +24,7 @@ BLOCK_MIRROR_WHEN_CAR_BEHIND_IS_AT_DISTANCE = 10
 
 class Runner:
     def __init__(self,
-                 environment: Environment,
+                 environment: CarlaEnvironment,
                  vehicle_factory: VehicleFactory,
                  ego_car: carla.Vehicle,
                  mirror: Mirror) -> None:
@@ -29,14 +35,20 @@ class Runner:
 
         self.world = self.vehicle_factory.world
         self.spectator = self.world.get_spectator()
-        self.task = Task(self.world)
+        self.carla_controller = CarlaController(self.world)
         
         self._search_target: Optional[carla.Actor] = None
         self._next_search_time: float = 0
         self._approaching_vehicle: Optional[str] = None
         self._blocking_window: Optional[Window] = None
         
+        self._remote_requests: SimpleQueue[Tuple[str,Optional[str]]] = SimpleQueue()
+        self._remote = Remote(self._add_remote_request)
+
         self._logger = Logger('spawner')
+        
+    def release(self):
+        self._remote.close()
 
     def make_step(self,
                   world_snapshot: carla.WorldSnapshot,
@@ -50,13 +62,24 @@ class Runner:
         self.environment.relocate_spectator(self.spectator, ego_car_snapshot)
 
         # update display
-        self.task.display_speed(ego_car_snapshot)
+        self.carla_controller.display_speed(ego_car_snapshot)
         if self._search_target is not None:
-            self.task.display_target_info(ego_car_snapshot, self._search_target)
+            self.carla_controller.display_target_info(ego_car_snapshot, self._search_target)
             # self.task.show_direction_to(ego_car_snapshot, search_target)
 
         vehicles = self.world.get_actors().filter('vehicle.*')
         self._check_traffic_event(cast(List[carla.Vehicle], vehicles), ego_car_snapshot)
+        
+        # check remote requests
+        if action is None and not self._remote_requests.empty():
+            req, param = self._remote_requests.get()
+            if req == Remote.REQUESTS[0]:
+                target_id = random.choice(DriverTask.TARGETS)
+                action = Action(ActionType.SPAWN_TARGET, target_id)
+            elif req == Remote.REQUESTS[1]:
+                self._logger.log('respose', param)
+            else:
+                print(f'Unknown request: {req} ({param})')
         
         # respond to a keypress
         spawned: Optional[carla.Actor] = None
@@ -69,26 +92,34 @@ class Runner:
         
     # Internal
     
+    def _add_remote_request(self, req: str, param: Optional[str]) -> None:
+        self._remote_requests.put((req, param))
+        
+    def _try_to_spawn_target(self,
+                      cmd: str,
+                      param: Optional[str]) -> None:
+        pass
+                        
     def _execute_action(self,
-                       action: Action,
-                       ego_car_snapshot: carla.ActorSnapshot) -> Optional[carla.Actor]:
+                        action: Action,
+                        ego_car_snapshot: carla.ActorSnapshot) -> Optional[carla.Actor]:
         spawned: Optional[carla.Actor] = None
         
         if action.type == ActionType.SPAWN_TARGET:
             if action.param is not None:
-                spawned = self.task.spawn_prop(action.param)
+                spawned = self.carla_controller.spawn_prop(action.param)
         if action.type == ActionType.SPAWN_TARGET_NEARBY:
             if action.param is not None:
-                spawned = self.task.spawn_prop_nearby(action.param, ego_car_snapshot)
+                spawned = self.carla_controller.spawn_prop_nearby(action.param, ego_car_snapshot)
         elif action.type == ActionType.SPAWN_CAR:
             if action.param == 'random':
-                spawned = self.task.spawn_vehicle(ego_car_snapshot, self.vehicle_factory)
+                spawned = self.carla_controller.spawn_vehicle(ego_car_snapshot, self.vehicle_factory)
             elif action.param == 'behind':
-                spawned = self.task.spawn_vehicle_behind(ego_car_snapshot, self.vehicle_factory, 30)
+                spawned = self.carla_controller.spawn_vehicle_behind(ego_car_snapshot, self.vehicle_factory, 30)
         elif action.type == ActionType.PRINT_INFO:
-            self.task.print_closest_waypoint(ego_car_snapshot)
+            self.carla_controller.print_closest_waypoint(ego_car_snapshot)
         elif action.type == ActionType.TOGGLE_NIGHT:
-            self.task.toiggle_night()
+            self.carla_controller.toiggle_night()
         elif action.type == ActionType.TOGGLE_MIRROR_DIMMING:
             self.mirror.toggle_brightness()
 
@@ -117,7 +148,7 @@ class Runner:
                     self.mirror.enabled = not BLOCK_MIRROR_ON_CAR_APPROACHING_FROM_BEHIND
                     break
         else:
-            self.task.display_info(ego_car_snapshot, f'{self._approaching_vehicle} is approaching the ego car')
+            self.carla_controller.display_info(ego_car_snapshot, f'{self._approaching_vehicle} is approaching the ego car')
     
     def _is_approaching_from_behind(self,
                                    transform: carla.Transform,

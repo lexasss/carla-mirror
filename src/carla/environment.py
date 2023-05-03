@@ -4,12 +4,12 @@ import carla
 
 from typing import Callable, Optional
 
-from src.vehicle_factory import VehicleFactory
+from src.carla.vehicle_factory import VehicleFactory
 from src.settings import Settings
 from src.offset import Offset
 
 
-class Environment:
+class CarlaEnvironment:
     FPS = 30
     
     DRIVERS = {
@@ -30,8 +30,8 @@ class Environment:
 
     @staticmethod
     def set_driver_offset(vehicle_type: str):
-        if vehicle_type in Environment.DRIVERS:
-            Environment.driver_offset = Environment.DRIVERS[vehicle_type]
+        if vehicle_type in CarlaEnvironment.DRIVERS:
+            CarlaEnvironment.driver_offset = CarlaEnvironment.DRIVERS[vehicle_type]
         else:
             print(f'The driver for {vehicle_type} is not defined')
 
@@ -40,16 +40,16 @@ class Environment:
                                         forward: float = 0,
                                         aside: float = 0,
                                         upward: float = 0) -> carla.Location:
-        offset_x = Environment.driver_offset.left + aside     # left
-        offset_y = Environment.driver_offset.forward + forward
-        offset_z = Environment.driver_offset.up + upward
+        offset_x = CarlaEnvironment.driver_offset.left + aside     # left
+        offset_y = CarlaEnvironment.driver_offset.forward + forward
+        offset_z = CarlaEnvironment.driver_offset.up + upward
 
         ego_car_transform = ego_car_snapshot.get_transform()
         loc = ego_car_transform.location
         rot = ego_car_transform.rotation
 
         ego_car_velocity = ego_car_snapshot.get_velocity()
-        meters_per_frame = math.sqrt(ego_car_velocity.x**2 + ego_car_velocity.y**2) / Environment.FPS       # because of the async mode, we need to compsate the path that the car travelled during the delay
+        meters_per_frame = math.sqrt(ego_car_velocity.x**2 + ego_car_velocity.y**2) / CarlaEnvironment.FPS       # because of the async mode, we need to compsate the path that the car travelled during the delay
 
         return carla.Location(
             loc.x + offset_x * math.sin(math.radians(rot.yaw)) + (offset_y + meters_per_frame) * math.cos(math.radians(rot.yaw)),
@@ -122,7 +122,7 @@ class Environment:
     def relocate_spectator(self,
                            spectator: carla.Actor,
                            ego_car_snapshot: carla.ActorSnapshot) -> None:
-        spectator_location = Environment.get_location_relative_to_driver(ego_car_snapshot)
+        spectator_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot)
         
         transform = carla.Transform(spectator_location, ego_car_snapshot.get_transform().rotation)
         spectator.set_transform(transform)

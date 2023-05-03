@@ -18,7 +18,10 @@ class Logger:
             Logger.file.close()
             print('Log file closed')
     
-    def log(self, *params: Any):
+    def log(self, *params: Any) -> None:
+        if Logger.file.closed:
+            return
+        
         timestamp = datetime.utcnow().timestamp()
         data = '\t'.join([str(x) for x in params])
         Logger.file.write(f'{timestamp}\t{self._type}\t{data}\n')

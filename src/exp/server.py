@@ -19,24 +19,26 @@ class Server:
         self._thread = threading.Thread(target = self._start)
         self._thread.start()
         
-    def close(self):
+    def close(self) -> None:
         self._isRunning = False
         self._thread.join()
         
-    def send(self, msg: str):
+    def send(self, msg: str) -> None:
         self._responses.put(msg)
-        
-    def _start(self):
+
+    # Internal
+
+    def _start(self) -> None:
         print('Server started')
 
         try:
-            asyncio.run(self.run_server())
+            asyncio.run(self._run_server())
         except Exception:
             logging.exception('start: asyncio.run')
 
         print('Server closed')
         
-    async def _client_connected(self, ws: WebSocketServerProtocol):
+    async def _client_connected(self, ws: WebSocketServerProtocol) -> None:
         print('Client connected')
         
         self._clients.add(ws)
@@ -57,7 +59,7 @@ class Server:
         
         print('Client diconnected')
             
-    async def run_server(self):
+    async def _run_server(self) -> None:
         async with serve(self._client_connected, "localhost", 15555):
             while self._isRunning:
 

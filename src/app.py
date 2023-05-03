@@ -16,19 +16,21 @@ except ImportError:
 
 import time
 
-from src.controller import Controller, ActionType
+from src.user_action import UserAction, ActionType
 from src.settings import Settings, Side
 from src.runner import Runner
-from src.carla_sync_mode import CarlaSyncMode
-from src.environment import Environment
-from src.vehicle_factory import VehicleFactory
+
+from src.carla.sync_mode import CarlaSyncMode
+from src.carla.environment import CarlaEnvironment
+from src.carla.vehicle_factory import VehicleFactory
+
 from src.mirror.side import SideMirror
 from src.mirror.wideview import WideviewMirror
 from src.mirror.top_view import TopViewMirror
 from src.mirror.fullscreen import FullscreenMirror
 from src.mirror.base import Mirror
-from src.logging import Logger
-from src.remote import Remote
+
+from src.exp.logging import Logger
 
 class App:
     
@@ -37,7 +39,7 @@ class App:
         
         self._logger = Logger('app')
 
-        Environment.set_driver_offset(VehicleFactory.EGO_CAR_TYPE)
+        CarlaEnvironment.set_driver_offset(VehicleFactory.EGO_CAR_TYPE)
         SideMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
         FullscreenMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
         WideviewMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
@@ -50,10 +52,8 @@ class App:
         client = carla.Client(settings.host, 2000)
         client.set_timeout(5.0)
         
-        remote = Remote()
-        
         try:
-            environment = Environment(client, settings)
+            environment = CarlaEnvironment(client, settings)
             world = environment.load_world(settings.town)
 
         except:
@@ -81,13 +81,14 @@ class App:
             # create_traffic(world)      # why they are all crashing if spawned at once when we exit from this script?
             
             self._show_carla_mirror(mirror, runner)
+            
+            if runner is not None:
+                runner.release()
 
         finally:
             for actor in self._spawned_actors:
                 actor.destroy()
 
-            remote.close()
-            
             pygame.quit()
 
     # Internal
@@ -99,7 +100,7 @@ class App:
         clock = pygame.time.Clock()
 
         while True:
-            action = Controller.get_input()
+            action = UserAction.get()
             
             if action is not None:
                 if action.type == ActionType.QUIT:
@@ -118,12 +119,12 @@ class App:
             mirror.draw_image(cast(carla.Image, image))
             
             pygame.display.flip()
-            clock.tick(Environment.FPS)
+            clock.tick(CarlaEnvironment.FPS)
 
     def _show_carla_mirror(self, mirror: Mirror, runner: Optional[Runner] = None):
         try:
             with CarlaSyncMode(cast(carla.World, mirror.world),
-                            Environment.FPS,
+                            CarlaEnvironment.FPS,
                             runner is not None,
                             cast(carla.Sensor, mirror.camera)) as sync_mode:     # Create a synchronous mode context.
                 self._run_loop(sync_mode, mirror, runner)
@@ -134,7 +135,7 @@ class App:
         clock = pygame.time.Clock()
 
         while True:
-            action = Controller.get_input()
+            action = UserAction.get()
             if action is not None:
                 if action.type == ActionType.QUIT:
                     break
@@ -144,7 +145,7 @@ class App:
             mirror.draw_image(None)
             
             pygame.display.flip()
-            clock.tick(Environment.FPS)
+            clock.tick(CarlaEnvironment.FPS)
 
     def _create_mirror(self, settings: Settings, world: Optional[carla.World] = None, ego_car: Optional[carla.Vehicle] = None) -> Mirror:
         if settings.side == Side.WIDEVIEW:

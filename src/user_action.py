@@ -1,6 +1,6 @@
 import pygame
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from enum import IntEnum
 
 class ActionType(IntEnum):
@@ -20,7 +20,24 @@ class Action:
         self.type = type
         self.param = param
 
-class Controller:
+class DriverTask:
+    TARGETS: List[str] = [
+        'bin',
+        'barrel',
+        'clothcontainer',
+        'trashcan01',
+        'plastictable',
+        'slide',
+        'trampoline',
+        'travelcase',
+        'travelcase',
+        'trafficcone01',
+        'kiosk_01',
+        'advertisement',
+        'mailbox',
+    ]
+
+class UserAction:
     SHORTCUTS: Dict[int, Action] = {
         pygame.constants.K_ESCAPE: Action(ActionType.QUIT),
         pygame.constants.K_1: Action(ActionType.SPAWN_TARGET, 'bin'),
@@ -45,7 +62,7 @@ class Controller:
     }
     
     @staticmethod
-    def get_input() -> Optional[Action]:
+    def get() -> Optional[Action]:
         for event in pygame.event.get():
             if event.type == pygame.constants.QUIT:
                 return Action(ActionType.QUIT)
@@ -65,6 +82,6 @@ class Controller:
             elif event.type == pygame.constants.MOUSEWHEEL:
                print(event)
             elif event.type == pygame.constants.KEYUP:
-                if event.key in Controller.SHORTCUTS:
-                    return Controller.SHORTCUTS[event.key]
+                if event.key in UserAction.SHORTCUTS:
+                    return UserAction.SHORTCUTS[event.key]
         return None
