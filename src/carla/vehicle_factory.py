@@ -20,14 +20,14 @@ class VehicleFactory:
         vehicles = self.world.get_actors().filter(VehicleFactory.EGO_CAR_TYPE)
         
         if (len(vehicles) == 0):
-            print(f'No vehicles found, spawining a new one')
+            print(f'CVF: No vehicles found, spawining a new one')
             vehicle: Optional[carla.Vehicle] = None
             while vehicle is None:
                 vehicle = self.make_vehicle(True)
                 time.sleep(0.5)
             return (vehicle, True)
         else:
-            print(f'Found a vehicle, attaching the mirror')
+            print(f'CVF: Found a vehicle, attaching the mirror')
             vehicle = cast(carla.Vehicle, vehicles[0])
             return (vehicle, False)
 

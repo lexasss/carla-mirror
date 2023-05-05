@@ -4,6 +4,6 @@ if __name__ == '__main__':
     try:
         App().run()
     except KeyboardInterrupt:
-        print('\nCancelled by user. Bye!')
+        print('APP: Cancelled by user')
     else:
-        print('done.')
+        print('APP: exit')

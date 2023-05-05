@@ -29,17 +29,17 @@ class Server:
     # Internal
 
     def _start(self) -> None:
-        print('Server started')
+        print('SRV: started')
 
         try:
             asyncio.run(self._run_server())
         except Exception:
             logging.exception('start: asyncio.run')
 
-        print('Server closed')
+        print('SRV: closed')
         
     async def _client_connected(self, ws: WebSocketServerProtocol) -> None:
-        print('Client connected')
+        print('SRV: client connected')
         
         self._clients.add(ws)
         
@@ -57,7 +57,7 @@ class Server:
                 
         self._clients.discard(ws)
         
-        print('Client diconnected')
+        print('SRV: client diconnected')
             
     async def _run_server(self) -> None:
         async with serve(self._client_connected, "localhost", 15555):

@@ -44,4 +44,4 @@ class FullscreenMirror(Mirror):
         if vehicle_type in FullscreenMirror.CAMERAS:
             FullscreenMirror.camera_offset = FullscreenMirror.CAMERAS[vehicle_type]
         else:
-            print(f'The camera for {vehicle_type} is not defined')
+            print(f'MFS: The camera for {vehicle_type} is not defined')

@@ -33,7 +33,7 @@ class CarlaEnvironment:
         if vehicle_type in CarlaEnvironment.DRIVERS:
             CarlaEnvironment.driver_offset = CarlaEnvironment.DRIVERS[vehicle_type]
         else:
-            print(f'The driver for {vehicle_type} is not defined')
+            print(f'CEV: The driver for {vehicle_type} is not defined')
 
     @staticmethod
     def get_location_relative_to_driver(ego_car_snapshot: carla.ActorSnapshot,
@@ -83,8 +83,8 @@ class CarlaEnvironment:
                     only_basic: Callable[[str], bool] = lambda map: not map.endswith('_Opt')
                     basic_maps = [map.split('/').pop()[4:] for map in filter(only_basic, available_maps)]
                     basic_maps = ', '.join(basic_maps)
-                    print(f'No map for Town{town_id}, only the following town ids are available:\n  ' +  basic_maps)
-            print(f'Using the map {world.get_map().name}')
+                    print(f'CEV: No map for Town{town_id}, only the following town ids are available:\n  ' +  basic_maps)
+            print(f'CEV: Using the map {world.get_map().name}')
 
         return world
 
@@ -105,7 +105,7 @@ class CarlaEnvironment:
             other_car = vehicle_factory.make_vehicle(False, transform)
             if other_car is not None:
                 vehicle_factory.configure_traffic_vehicle(other_car)
-                print(f'spawned {other_car.type_id} [#{n+1}]')
+                print(f'CEV: spawned {other_car.type_id} [#{n+1}]')
                 
     def add_traffic(self,
                     vehicle_factory: VehicleFactory,
@@ -117,7 +117,7 @@ class CarlaEnvironment:
                 other_car = vehicle_factory.make_vehicle(False)
                 if other_car is not None:
                     vehicle_factory.configure_traffic_vehicle(other_car)
-                    print(f'spawned {other_car.type_id} [#{len(vehicles)}]')
+                    print(f'CEV: spawned {other_car.type_id} [#{len(vehicles)}]')
             
     def relocate_spectator(self,
                            spectator: carla.Actor,

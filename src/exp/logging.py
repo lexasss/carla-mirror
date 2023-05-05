@@ -1,3 +1,5 @@
+import os
+
 from typing import Any
 from datetime import datetime
 
@@ -8,15 +10,22 @@ class Logger:
 
     def __init__(self, type: str) -> None:
         self._type = type
-        print(f'Created "{type}" log')
+        
+        print(f'LOG: created "{type}" log')
+        
         Logger.count += 1
         
     def __del__(self):
-        print(f'Deleted "{self._type}" log')
+        print(f'LOG: deleted "{self._type}" log')
         Logger.count -= 1
         if Logger.count == 0:
+            size = Logger.file.tell()
             Logger.file.close()
-            print('Log file closed')
+            
+            if size == 0:
+                os.remove(Logger.file.name) 
+                
+            print('LOG: file closed')
     
     def log(self, *params: Any) -> None:
         if Logger.file.closed:
@@ -25,4 +34,5 @@ class Logger:
         timestamp = datetime.utcnow().timestamp()
         data = '\t'.join([str(x) for x in params])
         Logger.file.write(f'{timestamp}\t{self._type}\t{data}\n')
-        print(f'{timestamp}\t{self._type}\t{data}')
+        
+        print(f'LOG: {timestamp}\t{self._type}\t{data}')

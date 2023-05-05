@@ -16,7 +16,7 @@ except ImportError:
 
 import time
 
-from src.user_action import UserAction, ActionType
+from src.user_action import UserAction, ActionType, Action
 from src.settings import Settings, Side
 from src.runner import Runner
 
@@ -31,6 +31,11 @@ from src.mirror.fullscreen import FullscreenMirror
 from src.mirror.base import Mirror
 
 from src.exp.logging import Logger
+from src.exp.scenario import Scenario
+from src.exp.remote import Remote
+
+class Finished(Exception):
+    pass
 
 class App:
     
@@ -57,7 +62,7 @@ class App:
             world = environment.load_world(settings.town)
 
         except:
-            print(f'CARLA is not running')
+            print(f'APP: CARLA is not running')
             mirror = self._create_mirror(settings)
             self._show_blank_mirror(mirror)
 
@@ -68,22 +73,17 @@ class App:
             ego_car, is_ego_car_created = vehicle_factory.get_ego_car()
 
             mirror = self._create_mirror(settings, world, ego_car)
-            self._logger.log('mirror', settings.side)
 
             if is_ego_car_created:
-                self._spawned_actors.append(ego_car)
+                self._logger.log('mirror', settings.side)
                 self._logger.log('car', ego_car.type_id)
+                self._spawned_actors.append(ego_car)
                 runner = Runner(environment, vehicle_factory, ego_car, mirror)
 
             if mirror.camera is not None:
                 self._spawned_actors.append(mirror.camera)
                 
-            # create_traffic(world)      # why they are all crashing if spawned at once when we exit from this script?
-            
             self._show_carla_mirror(mirror, runner)
-            
-            if runner is not None:
-                runner.release()
 
         finally:
             for actor in self._spawned_actors:
@@ -99,27 +99,53 @@ class App:
                  runner: Optional[Runner]):
         clock = pygame.time.Clock()
 
-        while True:
-            action = UserAction.get()
-            
-            if action is not None:
-                if action.type == ActionType.QUIT:
-                    break
-                elif action.type == ActionType.MOUSE:
-                    mirror.on_mouse(cast(str, action.param))
+        remote = Remote() if runner is not None else None
+        scenario = Scenario(remote) if remote is not None else None
 
-            # Advance the simulation and wait for the data.
-            snapshot, image = sync_mode.tick(timeout = 5.0)
-            
-            if runner is not None:
-                spawned = runner.make_step(cast(carla.WorldSnapshot, snapshot), action)
+        try:
+            while True:
+                action = UserAction.get()
+                
+                if scenario is not None:
+                    scenario.tick()
+                    if action is None: 
+                        action = scenario.get_action()
+                        
+                self._handle_action(action, mirror, scenario, runner)
+
+                # Advance the simulation and wait for the data.
+                mirror_image: Optional[carla.Image] = None
+                spawned: Optional[carla.Actor] = None
+                
+                can_driver = scenario is None or scenario.is_driving_enabled()
+                if can_driver:
+                    snapshot, image = sync_mode.tick(timeout = 5.0)
+                    mirror_image = cast(carla.Image, image)
+                
+                    if runner is not None:
+                        carla_snapshot = cast(carla.WorldSnapshot, snapshot)
+                        spawned = runner.make_step(carla_snapshot, action)
+                        
+                        if scenario is not None:
+                            self._update_scenario_state(scenario, runner, carla_snapshot.find(runner.ego_car.id))
+                            if action is not None:
+                                scenario.report_action_result(action, spawned is not None)
+
                 if spawned is not None:
                     self._spawned_actors.append(spawned)
 
-            mirror.draw_image(cast(carla.Image, image))
-            
-            pygame.display.flip()
-            clock.tick(CarlaEnvironment.FPS)
+                mirror.draw_image(mirror_image)
+                
+                pygame.display.flip()
+                
+                clock.tick(CarlaEnvironment.FPS)
+        except Finished:
+            pass
+        # except Exception as err:
+        #     print(f"Unexpected {err}, {type(err)}")
+
+        if remote is not None:
+            remote.close()
 
     def _show_carla_mirror(self, mirror: Mirror, runner: Optional[Runner] = None):
         try:
@@ -134,18 +160,29 @@ class App:
     def _show_blank_mirror(self, mirror: Mirror):
         clock = pygame.time.Clock()
 
+        remote = Remote()
+        scenario = Scenario(remote)
+
         while True:
             action = UserAction.get()
+            scenario.tick()
+
             if action is not None:
                 if action.type == ActionType.QUIT:
                     break
+                elif action.type == ActionType.START_SCENARIO:
+                    scenario.start()
                 elif action.type == ActionType.MOUSE:
                     mirror.on_mouse(cast(str, action.param))
+            else:
+                action = scenario.get_action()
             
             mirror.draw_image(None)
             
             pygame.display.flip()
             clock.tick(CarlaEnvironment.FPS)
+
+        remote.close()
 
     def _create_mirror(self, settings: Settings, world: Optional[carla.World] = None, ego_car: Optional[carla.Vehicle] = None) -> Mirror:
         if settings.side == Side.WIDEVIEW:
@@ -156,3 +193,37 @@ class App:
             return FullscreenMirror(settings, world, ego_car)
         else:
             return SideMirror(settings, world, ego_car)
+
+    def _handle_action(self,
+                       action: Optional[Action],
+                       mirror: Mirror,
+                       scenario: Optional[Scenario],
+                       runner: Optional[Runner]) -> None:
+        if action is not None:
+            if action.type == ActionType.QUIT:
+                raise Finished()
+            elif action.type == ActionType.START_SCENARIO:
+                if scenario is not None:
+                    scenario.start()
+            elif action.type == ActionType.MOUSE:
+                mirror.on_mouse(cast(str, action.param))
+            elif action.type == ActionType.REMOVE_TARGETS:
+                targets = [ x for x in self._spawned_actors if x.type_id.startswith('static.prop.') ]
+                for target in targets:
+                    self._spawned_actors.remove(target)
+                    target.destroy()
+            elif action.type == ActionType.REMOVE_CARS:
+                ego_car = runner.ego_car if runner is not None else None
+                vehicles = [ x for x in self._spawned_actors if x.type_id.startswith('vehicle.') and x != ego_car ]
+                for vehicle in vehicles:
+                    self._spawned_actors.remove(vehicle)
+                    vehicle.destroy()
+
+    def _update_scenario_state(self,
+                               scenario: Scenario,
+                               runner: Runner,
+                               ego_car_snapshot: carla.ActorSnapshot) -> None:
+        scenario.search_target_distance = runner.get_distance_to_search_target(ego_car_snapshot)
+        _, distance = runner.get_nearest_vehicle_behind(ego_car_snapshot)
+        scenario.set_nearest_vehicle_behind(distance)
+        

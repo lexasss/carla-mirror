@@ -75,9 +75,9 @@ class OpenGLRenderer:
             member = self._program[name]
             if isinstance(member, moderngl.Uniform):
                 self._glsl_uniforms.add(name)
-                print(f'{member.location}: uniform [{member.dimension}] {name}')
+                print(f'OGL: {member.location}: uniform [{member.dimension}] {name}')
             elif isinstance(member, moderngl.Attribute):
-                print(f'{member.location}: in [{member.dimension}] {name}')
+                print(f'OGL: {member.location}: in [{member.dimension}] {name}')
         
         if SHADER_CONTROL_WITH_MOUSE:
             if ('u_resolution' in self._glsl_uniforms):

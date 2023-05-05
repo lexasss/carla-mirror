@@ -1,19 +1,34 @@
 import pygame
 
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from enum import IntEnum
 
 class ActionType(IntEnum):
     NONE = 0
     QUIT = 1
-    SPAWN_TARGET = 2
-    SPAWN_CAR = 3
-    PRINT_INFO = 4
-    TOGGLE_NIGHT = 5
-    SPAWN_TARGET_NEARBY = 6
-    TOGGLE_MIRROR_DIMMING = 7
-    MOUSE = 16
-    MOUSEMOVE = 17
+
+    MOUSE = 4
+    MOUSEMOVE = 5
+
+    SPAWN_TARGET = 8
+    SPAWN_TARGET_NEARBY = 9
+    SPAWN_CAR = 10
+    REMOVE_TARGETS = 11
+    REMOVE_CARS = 12
+    
+    START_SCENARIO = 16
+    STOP_SCENARIO = 17
+    FREEZE = 18
+    UNFREEZE = 19
+    
+    PRINT_INFO = 32
+    TOGGLE_NIGHT = 33
+    TOGGLE_MIRROR_DIMMING = 34
+
+class CarSpawningLocation:
+    random = 'random'
+    behind_next_lane = 'behind_next_name'
+    behind_same_lane = 'behind_same_lane'
 
 class Action:
     def __init__(self, type: ActionType, param: Optional[str] = None):
@@ -21,25 +36,30 @@ class Action:
         self.param = param
 
 class DriverTask:
-    TARGETS: List[str] = [
-        'bin',
-        'barrel',
-        'clothcontainer',
-        'trashcan01',
-        'plastictable',
-        'slide',
-        'trampoline',
-        'travelcase',
-        'travelcase',
-        'trafficcone01',
-        'kiosk_01',
-        'advertisement',
-        'mailbox',
-    ]
+    TARGETS: Dict[str, str] = {
+        'bin': 'BIN',
+        'barrel': 'BARREL',
+        'clothcontainer': 'CLOTH CONTAINER',
+        'trashcan01': 'TRASH CAN',
+        'plastictable': 'PLASTIC TABLE',
+        'slide': 'KIDS` SLIDE',
+        'trampoline': 'TRAMPOLINE',
+        'travelcase': 'TRAVEL CASE',
+        'trafficcone01': 'TRAFIC CONE',
+        'kiosk_01': 'KIOSK',
+        'advertisement': 'ADVERTISEMENT',
+        'mailbox': 'MAILBOX',
+    }
 
 class UserAction:
     SHORTCUTS: Dict[int, Action] = {
         pygame.constants.K_ESCAPE: Action(ActionType.QUIT),
+        pygame.constants.K_F1: Action(ActionType.START_SCENARIO),
+        pygame.constants.K_F2: Action(ActionType.STOP_SCENARIO),
+        pygame.constants.K_F3: Action(ActionType.FREEZE),
+        pygame.constants.K_F4: Action(ActionType.UNFREEZE),
+        pygame.constants.K_F5: Action(ActionType.REMOVE_TARGETS),
+        pygame.constants.K_F6: Action(ActionType.REMOVE_CARS),
         pygame.constants.K_1: Action(ActionType.SPAWN_TARGET, 'bin'),
         pygame.constants.K_2: Action(ActionType.SPAWN_TARGET, 'barrel'),
         pygame.constants.K_3: Action(ActionType.SPAWN_TARGET, 'clothcontainer'),
@@ -53,11 +73,11 @@ class UserAction:
         pygame.constants.K_q: Action(ActionType.SPAWN_TARGET, 'kiosk_01'),
         pygame.constants.K_w: Action(ActionType.SPAWN_TARGET, 'advertisement'),
         pygame.constants.K_e: Action(ActionType.SPAWN_TARGET, 'mailbox'),
-        pygame.constants.K_p: Action(ActionType.SPAWN_TARGET_NEARBY, 'cottage'),
         pygame.constants.K_x: Action(ActionType.PRINT_INFO),
         pygame.constants.K_c: Action(ActionType.TOGGLE_NIGHT),
-        pygame.constants.K_n: Action(ActionType.SPAWN_CAR, 'behind'),
-        pygame.constants.K_m: Action(ActionType.SPAWN_CAR, 'random'),
+        pygame.constants.K_n: Action(ActionType.SPAWN_CAR, CarSpawningLocation.behind_next_lane),
+        pygame.constants.K_m: Action(ActionType.SPAWN_CAR, CarSpawningLocation.random),
+        pygame.constants.K_COMMA: Action(ActionType.SPAWN_CAR, CarSpawningLocation.behind_same_lane),
         pygame.constants.K_BACKSLASH: Action(ActionType.TOGGLE_MIRROR_DIMMING)
     }
     
@@ -80,7 +100,7 @@ class UserAction:
                 mouse = pygame.mouse.get_pos()
                 return Action(ActionType.MOUSE, f'move{mouse[0]},{mouse[1]}')
             elif event.type == pygame.constants.MOUSEWHEEL:
-               print(event)
+               pass
             elif event.type == pygame.constants.KEYUP:
                 if event.key in UserAction.SHORTCUTS:
                     return UserAction.SHORTCUTS[event.key]

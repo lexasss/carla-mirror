@@ -51,6 +51,6 @@ class SideMirror(Mirror):
         if vehicle_type in SideMirror.CAMERAS:
             SideMirror.camera_offset = SideMirror.CAMERAS[vehicle_type]
         else:
-            print(f'The camera for {vehicle_type} is not defined')
+            print(f'MSD: The camera for {vehicle_type} is not defined')
 
     # Internal

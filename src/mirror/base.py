@@ -74,6 +74,8 @@ class Mirror:
                 image_surface = pygame.transform.scale(image_surface, (self.width, self.height))
             self._display.blit(image_surface, (0, 0))
         else:
+            self._display.fill(Mirror.MASK_TRANSPARENT_COLOR)
+            
             # draw a matrix of circles, so we can inpect how the view is distorted in the shader
             MATRIX_SIZE = (20, 5)
             cell_width = self.width/MATRIX_SIZE[0]

@@ -1,21 +1,24 @@
 from typing import Callable, Optional
 
 from src.exp.server import Server
-# from src.exp.event import Event
+
+class RemoteRequest:
+    def __init__(self, req: str, param: Optional[str]) -> None:
+        self.req = req
+        self.param = param
+
+class RemoteRequests:
+    target_noticed = 'target'
+    lane_change_evaluated = 'vehicle'
 
 class Remote:
-    REQUESTS = [
-        'target',
-        'vehicle'
-    ]
-    
-    def __init__(self, cb: Callable[[str, Optional[str]], None]) -> None:
+    def __init__(self, cb: Optional[Callable[[RemoteRequest], None]] = None) -> None:
         self._server = Server(self._parse)
-
         self._cb = cb
-        # self.vehicle_response = Event[str]()
-        # self.target_response = Event[None]()
 
+    def set_callback(self, cb: Callable[[RemoteRequest], None]) -> None:
+        self._cb = cb
+        
     def close(self) -> None:
         self._server.close()
         
@@ -38,4 +41,5 @@ class Remote:
         req = p[0]
         param = p[1] if len(p) > 1 else None
         
-        self._cb(req, param)
+        if self._cb is not None:
+            self._cb(RemoteRequest(req, param))

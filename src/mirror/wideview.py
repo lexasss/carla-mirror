@@ -56,7 +56,7 @@ class WideviewMirror(Mirror):
         if vehicle_type in WideviewMirror.CAMERAS_Z:
             WideviewMirror.camera_z = WideviewMirror.CAMERAS_Z[vehicle_type]
         else:
-            print(f'The camera for {vehicle_type} is not defined')
+            print(f'MWV: The camera for {vehicle_type} is not defined')
 
     # def _get_image_as_array(self, image: carla.Image) -> 'np.ArrayLike[np.uint8]':
     #     buffer = super()._get_image_as_array(image)
