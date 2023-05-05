@@ -1,6 +1,6 @@
 import pygame
 
-from typing import Dict, Optional
+from typing import Optional, Union, Tuple, Dict
 from enum import IntEnum
 
 class ActionType(IntEnum):
@@ -27,11 +27,11 @@ class ActionType(IntEnum):
 
 class CarSpawningLocation:
     random = 'random'
-    behind_next_lane = 'behind_next_name'
+    behind_next_lane = 'behind_next_lane'
     behind_same_lane = 'behind_same_lane'
 
 class Action:
-    def __init__(self, type: ActionType, param: Optional[str] = None):
+    def __init__(self, type: ActionType, param: Optional[Union[str, float, int, Tuple[Union[str, float, int], ...]]] = None):
         self.type = type
         self.param = param
 
@@ -75,9 +75,9 @@ class UserAction:
         pygame.constants.K_e: Action(ActionType.SPAWN_TARGET, 'mailbox'),
         pygame.constants.K_x: Action(ActionType.PRINT_INFO),
         pygame.constants.K_c: Action(ActionType.TOGGLE_NIGHT),
-        pygame.constants.K_n: Action(ActionType.SPAWN_CAR, CarSpawningLocation.behind_next_lane),
-        pygame.constants.K_m: Action(ActionType.SPAWN_CAR, CarSpawningLocation.random),
-        pygame.constants.K_COMMA: Action(ActionType.SPAWN_CAR, CarSpawningLocation.behind_same_lane),
+        pygame.constants.K_n: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_next_lane, 30)),
+        pygame.constants.K_m: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_same_lane, 30)),
+        pygame.constants.K_COMMA: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.random, 0)),
         pygame.constants.K_BACKSLASH: Action(ActionType.TOGGLE_MIRROR_DIMMING)
     }
     

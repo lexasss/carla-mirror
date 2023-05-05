@@ -4,6 +4,35 @@ import carla
 
 from typing import Optional, Tuple, cast
 
+PASSENGE_CARS = [
+    'vehicle.audi.a2',
+    'vehicle.audi.etron',
+    'vehicle.audi.tt',
+    'vehicle.bmw.grandtourer',
+    'vehicle.chevrolet.impala',
+    'vehicle.citroen.c3',
+    'vehicle.dodge.charger_2020',
+    'vehicle.dodge.charger_police',
+    'vehicle.dodge.charger_police_2020',
+    'vehicle.ford.crown',
+    'vehicle.ford.mustang',
+    'vehicle.jeep.wrangler_rubicon',
+    'vehicle.lincoln.mkz_2017',
+    'vehicle.lincoln.mkz_2020',
+    'vehicle.mercedes.coupe',
+    'vehicle.mercedes.coupe_2020',
+    'vehicle.micro.microlino',
+    'vehicle.mini.cooper_s',
+    'vehicle.mini.cooper_s_2021',
+    'vehicle.nissan.micra',
+    'vehicle.nissan.patrol',
+    'vehicle.nissan.patrol_2021',
+    'vehicle.seat.leon',
+    'vehicle.tesla.model3',
+    'vehicle.toyota.prius',
+    'vehicle.tesla.cybertruck',
+]
+
 class VehicleFactory:
     EGO_CAR_TYPE = 'vehicle.lincoln.mkz_2017'
     #EGO_CAR_TYPE = 'vehicle.toyota.prius'
@@ -37,10 +66,14 @@ class VehicleFactory:
         vehicle_bp: Optional[carla.ActorBlueprint] = None
         if is_ego_car:
             vehicle_bp = self.world.get_blueprint_library().filter(VehicleFactory.EGO_CAR_TYPE)[0]
-            vehicle_bp.set_attribute('role_name', 'hero')
+            vehicle_bp.set_attribute('role_name', 'ego')
         else:
             vehicles_bps = self.world.get_blueprint_library().filter('vehicle.*')
-            vehicles_bps = [x for x in vehicles_bps if int(x.get_attribute('number_of_wheels')) == 4]
+            vehicles_bps = [
+                bp for bp in vehicles_bps if 
+                    int(bp.get_attribute('number_of_wheels')) == 4
+                    and bp.id in PASSENGE_CARS
+            ]
             vehicle_bp = random.choice(vehicles_bps)
             
             while vehicle_bp.id == VehicleFactory.EGO_CAR_TYPE:

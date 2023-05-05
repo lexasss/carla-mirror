@@ -75,9 +75,13 @@ class App:
             mirror = self._create_mirror(settings, world, ego_car)
 
             if is_ego_car_created:
-                self._logger.log('mirror', settings.side)
-                self._logger.log('car', ego_car.type_id)
+                mirror_name = str(settings.side).split('.')[1].lower()
+                self._logger.log('mirror', mirror_name)
+                car_name = '_'.join(ego_car.type_id.split('.')[1:])
+                self._logger.log('car', car_name)
+                
                 self._spawned_actors.append(ego_car)
+                
                 runner = Runner(environment, vehicle_factory, ego_car, mirror)
 
             if mirror.camera is not None:
@@ -117,8 +121,8 @@ class App:
                 mirror_image: Optional[carla.Image] = None
                 spawned: Optional[carla.Actor] = None
                 
-                can_driver = scenario is None or scenario.is_driving_enabled()
-                if can_driver:
+                can_drive = scenario is None or scenario.is_driving_enabled()
+                if can_drive:
                     snapshot, image = sync_mode.tick(timeout = 5.0)
                     mirror_image = cast(carla.Image, image)
                 
@@ -141,11 +145,11 @@ class App:
                 clock.tick(CarlaEnvironment.FPS)
         except Finished:
             pass
-        # except Exception as err:
-        #     print(f"Unexpected {err}, {type(err)}")
-
+            
         if remote is not None:
             remote.close()
+        
+        self._remove_spawned(sync_mode)
 
     def _show_carla_mirror(self, mirror: Mirror, runner: Optional[Runner] = None):
         try:
@@ -224,6 +228,14 @@ class App:
                                runner: Runner,
                                ego_car_snapshot: carla.ActorSnapshot) -> None:
         scenario.search_target_distance = runner.get_distance_to_search_target(ego_car_snapshot)
-        _, distance = runner.get_nearest_vehicle_behind(ego_car_snapshot)
-        scenario.set_nearest_vehicle_behind(distance)
+        vehicle, distance, lane = runner.get_nearest_vehicle_behind(ego_car_snapshot)
+        if vehicle is not None and lane is not None:
+            scenario.set_nearest_vehicle_behind(vehicle.type_id, distance, lane)
         
+    def _remove_spawned(self, sync_mode: CarlaSyncMode):
+        actors = [x for x in self._spawned_actors if not x.type_id.startswith('sensor.')]
+        self._spawned_actors = [x for x in self._spawned_actors if x.type_id.startswith('sensor.')]
+        
+        for actor in actors:
+            actor.destroy()
+            sync_mode.tick(timeout = 5.0)

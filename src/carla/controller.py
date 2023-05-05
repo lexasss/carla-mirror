@@ -91,11 +91,13 @@ class CarlaController:
                              vehicle_factory: VehicleFactory,
                              distance: float,
                              same_lane: bool = False) -> Optional[carla.Actor]:
+        map = self.world.get_map()
+        
         ego_car_tranform = ego_car_snapshot.get_transform()
-        ego_car_waypoint = self.world.get_map().get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
+        ego_car_waypoint = map.get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
         
         vehicle_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, -distance)
-        vehicle_waypoint = self.world.get_map().get_waypoint(vehicle_location, True, carla.LaneType.Driving)
+        vehicle_waypoint = map.get_waypoint(vehicle_location, True, carla.LaneType.Driving)
 
         if ego_car_waypoint is None or vehicle_waypoint is None:
             print('CCR: No waypoint to spawn the car')

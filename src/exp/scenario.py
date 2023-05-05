@@ -10,12 +10,10 @@ from src.user_action import Action, ActionType, DriverTask, CarSpawningLocation
 from src.exp.remote import RemoteRequests, RemoteRequest, Remote
 from src.exp.logging import Logger
 
-DISTANCES = [25, 25, 25]
+REPETITIONS = 5
+DISTANCES = [5, 15, 25]
+SPAWN_VEHICLE_BEHIND = 30 # meters
 SPAWN_LOCATIONS = [
-    CarSpawningLocation.behind_next_lane,
-    CarSpawningLocation.behind_next_lane,
-    CarSpawningLocation.behind_same_lane,
-    CarSpawningLocation.random,
     CarSpawningLocation.behind_next_lane,
     CarSpawningLocation.behind_same_lane,
     CarSpawningLocation.random,
@@ -62,11 +60,17 @@ class Scenario:
 
         self._logger = Logger('scenario')
         
-        self._task_distances = DISTANCES
+        self._task_distances: List[float] = []
         self._task_distance_index = -1
         self._task_distance = 0
         self._task_waiting_for_reply = False
         self._task_displays_frozen = False
+        
+        for _ in range(REPETITIONS):
+            for dist in DISTANCES:
+                self._task_distances.append(dist)
+        
+        random.shuffle(self._task_distances)
         
         self._car_spawning_location_index = 0
         
@@ -80,12 +84,9 @@ class Scenario:
         
         self._next_task()
         self._delayed_tasks.append(DelayedTask(1.0, self._spanw_random_target))
-        self._delayed_tasks.append(DelayedTask(2.0, self._spanw_next_car))
+        self._delayed_tasks.append(DelayedTask(2.0, self._spawn_next_car))
         
     def tick(self) -> None:
-        if not self._is_running:
-            return
-        
         finished_tasks = [task for task in self._delayed_tasks if task.tick()]
         for task in finished_tasks:
             self._delayed_tasks.remove(task)
@@ -102,14 +103,17 @@ class Scenario:
                 self._controller_actions.put(Action(ActionType.UNFREEZE))
 
                 if self._next_task():
-                    self._delayed_tasks.append(DelayedTask(2.0, self._spanw_next_car))
+                    self._delayed_tasks.append(DelayedTask(2.0, self._spawn_next_car))
                 else:
                     self._clear_tasks()
-                    
+
+                    self._delayed_tasks.append(DelayedTask(0.3, self._remote.show_message, 'Done!\nThank you!'))
                     self._delayed_tasks.append(DelayedTask(1.5, self._controller_actions.put, Action(ActionType.STOP_SCENARIO)))
+
+                    self._logger.log('done')
                     self._is_running = False
                 
-                self._delayed_tasks.append(DelayedTask(0.3, self._remote.hide_questionnaire))
+                self._delayed_tasks.append(DelayedTask(0.5, self._remote.hide_questionnaire))
                 self._delayed_tasks.append(DelayedTask(1.0, self._continue_driving))
             else:
                 print(f'SCN: unknown request: {request.req} ({request.param})')
@@ -120,7 +124,10 @@ class Scenario:
             print(f'SCN: action {result.type} ({result.param})')
             return result
         
-    def set_nearest_vehicle_behind(self, disatnce: float) -> bool:
+    def set_nearest_vehicle_behind(self, name: str, disatnce: float, lane: str) -> bool:
+        if not self._is_running:
+            return False
+        
         if not self._task_waiting_for_reply:
             if abs(disatnce - self._task_distance) < 0.5:
                 self._clear_tasks()
@@ -131,6 +138,8 @@ class Scenario:
                 self._controller_actions.put(Action(ActionType.REMOVE_CARS))
                 self._controller_actions.put(Action(ActionType.FREEZE))
                 
+                name = '_'.join(name.split('.')[1:])
+                self._logger.log('car', 'approached', name, lane, f'{disatnce:.1f}')
                 self._logger.log('evaluation', 'request')
                 
                 self._delayed_tasks.append(DelayedTask(0.1, self._stop_driving))
@@ -140,6 +149,9 @@ class Scenario:
         return False
     
     def report_action_result(self, action: Action, has_spawned: bool):
+        if not self._is_running:
+            return
+        
         if action.type == ActionType.SPAWN_CAR:
             if has_spawned:
                 location = SPAWN_LOCATIONS[self._car_spawning_location_index]
@@ -149,28 +161,29 @@ class Scenario:
                 if self._car_spawning_location_index == len(SPAWN_LOCATIONS):
                     self._car_spawning_location_index = 0
                     
-                self._delayed_tasks.append(DelayedTask(SPAWN_PAUSE, self._spanw_next_car))
+                self._delayed_tasks.append(DelayedTask(SPAWN_PAUSE, self._spawn_next_car))
             else:
-                self._delayed_tasks.append(DelayedTask(1.0, self._spanw_next_car))
+                self._delayed_tasks.append(DelayedTask(1.0, self._spawn_next_car))
                 
     
     # Internal
 
     def _spanw_random_target(self) -> None:
         target_id = random.choice([x for x in DriverTask.TARGETS])
-        self._logger.log('target', 'spawned', target_id)
+
+        name = '_'.join(target_id.split('.')[1:])
+        self._logger.log('target', 'spawned', name)
+
         self._controller_actions.put(Action(ActionType.SPAWN_TARGET, target_id))
         self._delayed_tasks.append(DelayedTask(1.0, self._remote.show_message, f'Please find "{DriverTask.TARGETS[target_id]}"'))
         
-    def _spanw_next_car(self) -> None:
-        location = SPAWN_LOCATIONS[self._car_spawning_location_index]
-        self._controller_actions.put(Action(ActionType.SPAWN_CAR, location))
+    def _spawn_next_car(self) -> None:
+        param = (SPAWN_LOCATIONS[self._car_spawning_location_index], SPAWN_VEHICLE_BEHIND)
+        self._controller_actions.put(Action(ActionType.SPAWN_CAR, param))
         
     def _next_task(self):
         self._task_distance_index += 1
         if self._task_distance_index == len(self._task_distances):
-            self._delayed_tasks.append(DelayedTask(1.0, self._remote.show_message, 'Done!\nThank you!'))
-            self._logger.log('done')
             return False
         
         self._task_distance = self._task_distances[self._task_distance_index]

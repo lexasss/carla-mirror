@@ -20,8 +20,6 @@ TRAFFIC_COUNT = 0
 BLOCK_MIRROR_ON_CAR_APPROACHING_FROM_BEHIND = False
 BLOCK_MIRROR_WHEN_CAR_BEHIND_IS_AT_DISTANCE = 10
 
-SPAWN_VEHICLE_BEHIND = 30 # meters
-
 class Runner:
     def __init__(self,
                  environment: CarlaEnvironment,
@@ -78,12 +76,12 @@ class Runner:
 
         return spawned
     
-    def get_nearest_vehicle_behind(self, ego_car_snapshot: carla.ActorSnapshot) -> Tuple[Optional[carla.Vehicle], float]:
+    def get_nearest_vehicle_behind(self, ego_car_snapshot: carla.ActorSnapshot) -> Tuple[Optional[carla.Vehicle], float, Optional[str]]:
         actors = self.world.get_actors().filter('vehicle.*')
         vehicles = cast(List[carla.Vehicle], actors)
         
         min_distance = sys.float_info.max
-        result: Optional[carla.Vehicle] = None
+        car: Optional[carla.Vehicle] = None
 
         for vehicle in vehicles:
             transform = vehicle.get_transform()
@@ -92,9 +90,10 @@ class Runner:
             is_approaching_from_behind, distance = self._is_approaching_from_behind(transform, velocity, ego_car_snapshot)
             if is_approaching_from_behind and distance < min_distance:
                 min_distance = distance
-                result = vehicle
-                
-        return result, min_distance
+                car = vehicle
+
+        lane = self._get_lane(ego_car_snapshot, car)
+        return car, min_distance, lane
     
     def get_distance_to_search_target(self, ego_car_snapshot: carla.ActorSnapshot) -> float:
         if self._search_target is None:
@@ -140,18 +139,18 @@ class Runner:
         spawned: Optional[carla.Actor] = None
         
         if action.type == ActionType.SPAWN_TARGET:
-            if action.param is not None:
+            if isinstance(action.param, str):
                 spawned = self.controller.spawn_prop(action.param)
         elif action.type == ActionType.SPAWN_TARGET_NEARBY:
-            if action.param is not None:
+            if isinstance(action.param, str):
                 spawned = self.controller.spawn_prop_nearby(action.param, ego_car_snapshot)
         elif action.type == ActionType.SPAWN_CAR:
-            if action.param == CarSpawningLocation.random:
-                spawned = self.controller.spawn_vehicle(ego_car_snapshot, self.vehicle_factory)
-            elif action.param == CarSpawningLocation.behind_next_lane:
-                spawned = self.controller.spawn_vehicle_behind(ego_car_snapshot, self.vehicle_factory, SPAWN_VEHICLE_BEHIND)
-            elif action.param == CarSpawningLocation.behind_same_lane:
-                spawned = self.controller.spawn_vehicle_behind(ego_car_snapshot, self.vehicle_factory, SPAWN_VEHICLE_BEHIND, True)
+            if isinstance(action.param, tuple):
+                location, distance = action.param
+                if location == CarSpawningLocation.random:
+                    spawned = self.controller.spawn_vehicle(ego_car_snapshot, self.vehicle_factory)
+                else:
+                    spawned = self.controller.spawn_vehicle_behind(ego_car_snapshot, self.vehicle_factory, cast(float, distance), location == CarSpawningLocation.behind_same_lane)
         if action.type == ActionType.REMOVE_TARGETS:
             self._search_target = None
         if action.type == ActionType.REMOVE_CARS:
@@ -173,8 +172,10 @@ class Runner:
         elif action.type == ActionType.UNFREEZE:
             self.controller.display_info(ego_car_snapshot, 'OPENED')
 
-        if spawned is not None:    
-            self._logger.log(action.type, spawned.type_id)
+        if spawned is not None:
+            evt = str(action.type).split('.')[1].split('_')[1].lower()
+            name = '_'.join(spawned.type_id.split('.')[1:])
+            self._logger.log(evt, name)
                 
         return spawned
     
@@ -223,3 +224,29 @@ class Runner:
             return False, 0
         
         return True, dist
+    
+    def _get_lane(self, ego_car_snapshot: carla.ActorSnapshot, other_car: Optional[carla.Vehicle]) -> Optional[str]:
+        if other_car is None:
+            return None
+        
+        map = self.world.get_map()
+        
+        ego_car_tranform = ego_car_snapshot.get_transform()
+        ego_car_waypoint = map.get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
+        
+        vehicle_tranform = other_car.get_transform()
+        vehicle_waypoint = map.get_waypoint(vehicle_tranform.location, True, carla.LaneType.Driving)
+        
+        if ego_car_waypoint is None or vehicle_waypoint is None:
+            return None
+
+        ego_car_lane = abs(ego_car_waypoint.lane_id)
+        vehicle_lane = abs(vehicle_waypoint.lane_id)
+        
+        if ego_car_lane < vehicle_lane:
+            return 'left'
+        elif ego_car_lane > vehicle_lane:
+            return 'right'
+        else:
+            return 'behind'
+        
