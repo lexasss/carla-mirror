@@ -41,5 +41,5 @@ class TaskScreen:
         req = p[0]
         param = p[1] if len(p) > 1 else None
         
-        if self._cb is not None:
+        if self._cb:
             self._cb(TaskScreenRequest(req, param))

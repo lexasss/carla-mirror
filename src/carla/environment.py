@@ -72,7 +72,7 @@ class CarlaEnvironment:
     def load_world(self,
                    town_id: Optional[str]) -> carla.World:
         world = self.client.get_world()
-        if (town_id is not None):
+        if town_id:
             desired_map_name = f'/Game/Carla/Maps/Town{town_id}'
             map_name = world.get_map().name
             if map_name != desired_map_name and map_name != (desired_map_name + '_Opt'):
@@ -103,7 +103,7 @@ class CarlaEnvironment:
             if n == max_count:
                 break
             other_car = vehicle_factory.make_vehicle(False, transform)
-            if other_car is not None:
+            if other_car:
                 vehicle_factory.configure_traffic_vehicle(other_car)
                 print(f'CEV: spawned {other_car.type_id} [#{n+1}]')
                 
@@ -115,7 +115,7 @@ class CarlaEnvironment:
             vehicles: list[carla.Actor] = world.get_actors().filter('vehicle.*')
             if len(vehicles) < (max_count + 1):
                 other_car = vehicle_factory.make_vehicle(False)
-                if other_car is not None:
+                if other_car:
                     vehicle_factory.configure_traffic_vehicle(other_car)
                     print(f'CEV: spawned {other_car.type_id} [#{len(vehicles)}]')
             

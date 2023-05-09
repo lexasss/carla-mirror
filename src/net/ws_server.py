@@ -52,7 +52,7 @@ class WsServer:
             except:
                 logging.exception('_client_connected: await ws.recv()')
         
-            if message is not None:
+            if message:
                 self._requests.put(message)
                 
         self._clients.discard(ws)

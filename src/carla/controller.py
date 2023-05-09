@@ -50,7 +50,7 @@ class CarlaController:
         self.update_info(ego_car_snapshot)
 
     def update_info(self, ego_car_snapshot: carla.ActorSnapshot):
-        if self._info is not None:
+        if self._info:
             display_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, DISPLAY_X, DISPLAY_Y, DISPLAY_Z - 3 * DISPLAY_LINE_HEIGHT)
             self.debug.draw_string(display_location, self._info, color = DISPLAY_EXP_INFO_COLOR, life_time = -1)
 
@@ -131,7 +131,7 @@ class CarlaController:
         vehicle_transform = carla.Transform(vehicle_location, new_vehicle_waypoint.transform.rotation)
         vehicle = vehicle_factory.make_vehicle(False, vehicle_transform)
         
-        if vehicle is not None:
+        if vehicle:
             vehicle_factory.configure_traffic_vehicle(vehicle)
             
         return vehicle
@@ -147,7 +147,7 @@ class CarlaController:
                     location,
                     project_to_road = True,
                     lane_type = carla.LaneType.Sidewalk)
-                if waypoint is not None:
+                if waypoint:
                     result = self._create_target(name, waypoint.transform)
                 # transform = carla.Transform(
                 #     self.world.get_random_location_from_navigation(),
@@ -165,7 +165,7 @@ class CarlaController:
             ego_car_snapshot.get_transform().location,
             project_to_road = True,
             lane_type = carla.LaneType.Sidewalk)
-        if waypoint is not None:
+        if waypoint:
             return self._create_target(name, waypoint.transform)
         else:
             return None
@@ -203,7 +203,7 @@ class CarlaController:
             ego_car_snapshot.get_transform().location,
             project_to_road=True,
             lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder)
-        if waypoint is not None:
+        if waypoint:
             print("Waypoint: " + str(waypoint.transform.location))
             print(f"Current lane type: {waypoint.lane_type}, {waypoint.lane_id}, {waypoint.lane_change}, {waypoint.lane_width}")
 

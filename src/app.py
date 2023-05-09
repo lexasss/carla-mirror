@@ -115,7 +115,7 @@ class App:
         mirror_status = MirrorStatus()
         scenario = Scenario(task_screen, tcp_server, tcp_client, mirror_status) if task_screen else None
         
-        if tcp_server is not None:
+        if tcp_server:
             tcp_server.start()
         if tcp_client:
             tcp_client.connect(mirror_status.handle_net_request)

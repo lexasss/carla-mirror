@@ -28,7 +28,7 @@ class TcpServer:
         def on_message(sock: socket, peer: Any, message: bytes): # pyright: ignore[ reportUnusedFunction ]
             request = message.decode().rstrip('\r\n')
             print(f'TCS: request from {peer}: {request}')
-            if self._cb is not None:
+            if self._cb:
                 self._cb(request)
             
         self._server = socket_server
@@ -41,12 +41,12 @@ class TcpServer:
             self._thread.start()
         
     def send(self, data: str) -> None:
-        if self._thread is not None:
+        if self._thread:
             for client in self._clients:
                 self._server.send(client, data.encode())
         
     def close(self) -> None:
-        if self._thread is not None:
+        if self._thread:
             self._server.server_socket.close()
             self._thread.join()
             self._thread = None

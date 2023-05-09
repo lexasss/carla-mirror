@@ -57,9 +57,9 @@ class Runner:
         self.environment.relocate_spectator(self.spectator, ego_car_snapshot)
 
         # respond to a keypress
-        if action is not None:
+        if action:
             spawned = self._execute_action(action, ego_car_snapshot)
-            if spawned is not None:
+            if spawned:
                 if action.type == ActionType.SPAWN_TARGET or action.type == ActionType.SPAWN_TARGET_NEARBY:
                     self._search_target = spawned
                 if action.type == ActionType.SPAWN_CAR:
@@ -69,9 +69,9 @@ class Runner:
         self.controller.display_speed(ego_car_snapshot)
         self.controller.update_info(ego_car_snapshot)
         
-        if self._search_target is not None:
+        if self._search_target:
             self.controller.display_target_info(ego_car_snapshot, self._search_target)
-        if self._last_vehicle is not None:
+        if self._last_vehicle:
             self.controller.display_vehicle_info(ego_car_snapshot, self._last_vehicle)
 
         return spawned
@@ -172,7 +172,7 @@ class Runner:
         elif action.type == ActionType.UNFREEZE:
             self.controller.display_info(ego_car_snapshot, 'OPENED')
 
-        if spawned is not None:
+        if spawned:
             evt = str(action.type).split('.')[1].split('_')[1].lower()
             name = '_'.join(spawned.type_id.split('.')[1:])
             self._logger.log(evt, name)
@@ -191,7 +191,7 @@ class Runner:
         if dist < 1:    # this is ego car, ignore it
             return False, 0
         
-        if distance is not None and abs(dist - distance) > 0.5:
+        if distance and abs(dist - distance) > 0.5:
             return False, 0
         
         # other vehicle should move about the same direction as the ego car, plus-minus 15 degrees

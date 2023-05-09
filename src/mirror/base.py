@@ -48,7 +48,7 @@ class Mirror:
 
         self._mask: Optional[pygame.surface.Surface] = None
 
-        if mask_name is not None:
+        if mask_name:
             mask = pygame.image.load(f'images/{mask_name}.png')
             self._mask = pygame.transform.scale(mask, (self.width + 1, self.height + 1))  # black lines may be visible at the edges if we do not expand the image by 1 pixels in each dimension
 
@@ -66,7 +66,7 @@ class Mirror:
 
         if not self.enabled:
             self._display.fill(Mirror.BLANK_COLOR)
-        elif image is not None:
+        elif image:
             buffer = self._get_image_as_array(image)
             normal_view = buffer.swapaxes(0, 1)
             image_surface = pygame.surfarray.make_surface(normal_view)
@@ -86,10 +86,10 @@ class Mirror:
                     y = (j + 0.5) * cell_height
                     pygame.draw.circle(self._display, (255,0,255), (x,y), 10)
 
-        if self._mask is not None:
+        if self._mask:
             self._display.blit(self._mask, (-1, -1))    # there is a 1-pixel black line on the left and top remained visible if we set the origin to 0,0, thus now it is -1,-1
 
-        if self._display_gl is not None:
+        if self._display_gl:
             texture_data = self._display.get_view('1')
             self._display_gl.render(texture_data)
 
@@ -111,21 +111,21 @@ class Mirror:
             y = self._window_pos[1] + mouse_y - self._mouse_pos[1]
             self._wnd.set_location(x, y)
         elif cmd.startswith('move'):
-            if self._display_gl is not None:
+            if self._display_gl:
                 a = [float(x) for x in cmd[4:].split(',')]
                 self._display_gl.mouse = (self.width - a[0]), a[1]
         elif cmd == 'scroll_up':
-            if self._display_gl is not None:
+            if self._display_gl:
                 self._display_gl.zoomIn()
         elif cmd == 'scroll_down':
-            if self._display_gl is not None:
+            if self._display_gl:
                 self._display_gl.zoomOut()
                 
 
     # Internal
 
     def _make_display(self, size: Tuple[int, int]) -> pygame.surface.Surface:
-        if self.shader is not None:
+        if self.shader:
             self._display_gl = OpenGLRenderer(size, self.shader, self.world is None)
             display = self._display_gl.screen
         else:
@@ -137,7 +137,7 @@ class Mirror:
         self._wnd = Window(pygame.display.get_wm_info()['window'])
         self._wnd.set_location(self._window_pos[0], self._window_pos[1])
 
-        if self._mask is not None:
+        if self._mask:
             self._wnd.set_transparent_color(Mirror.MASK_TRANSPARENT_COLOR)
             
         return display

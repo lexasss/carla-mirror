@@ -15,7 +15,7 @@ class TcpClient:
         def on_message(message: bytes): # pyright: ignore[ reportUnusedFunction ]
             request = message.decode().rstrip('\r\n')
             print(f'TCC: message from server: {request}')
-            if self._cb is not None:
+            if self._cb:
                 self._cb(request)
         
         self._client = socket_client
