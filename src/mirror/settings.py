@@ -8,14 +8,14 @@ from typing import Any, List
 FILENAME = 'mirror_settings.json'
 
 class MirrorSettings:
-    def __init__(self, section: str, **d: Any) -> None:
+    def __init__(self, section: str, **settings: Any) -> None:
         self.x = 0
         self.y = 0
         
         self._section = section
         self._is_initialized = False
         
-        for key, val in d.items():
+        for key, val in settings.items():
             setattr(self, key, val)    
             self._is_initialized = True
 

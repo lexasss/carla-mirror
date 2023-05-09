@@ -4,8 +4,8 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-from queue import Queue
-from typing import Callable, List, Union, Any, Tuple
+from queue import Queue, Empty
+from typing import Callable, List, Union, Any, Tuple, Optional
 
 import carla
 
@@ -55,13 +55,17 @@ class CarlaSyncMode(object):
     def __exit__(self, *sensors: Tuple[carla.Sensor]):
         self._world.apply_settings(self._settings)
 
-    def tick(self, timeout: float) -> List[QueryResult]:
+    def tick(self, timeout: float) -> Optional[List[QueryResult]]:
         if self._can_tick_world:
             self._frame = self._world.tick()
             data = [self._retrieve_data(q, timeout) for q in self._queues]
         else:
             # we are forced to ignore the frame number here, as we are not allowed to call world.tick()
-            data = [q.get(timeout = timeout) for q in self._queues]
+            try:
+                data = [q.get(timeout = timeout) for q in self._queues]
+            except Empty:
+                return None
+            
         #assert all(x.frame == self.frame for x in data)
         return data
 

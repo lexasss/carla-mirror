@@ -1,22 +1,22 @@
 from typing import Callable, Optional
 
-from src.exp.server import Server
+from src.net.ws_server import WsServer
 
-class RemoteRequest:
+class TaskScreenRequest:
     def __init__(self, req: str, param: Optional[str]) -> None:
         self.req = req
         self.param = param
 
-class RemoteRequests:
+class TaskScreenRequests:
     target_noticed = 'target'
     lane_change_evaluated = 'vehicle'
 
-class Remote:
-    def __init__(self, cb: Optional[Callable[[RemoteRequest], None]] = None) -> None:
-        self._server = Server(self._parse)
+class TaskScreen:
+    def __init__(self, cb: Optional[Callable[[TaskScreenRequest], None]] = None) -> None:
+        self._server = WsServer(self._parse)
         self._cb = cb
 
-    def set_callback(self, cb: Callable[[RemoteRequest], None]) -> None:
+    def set_callback(self, cb: Callable[[TaskScreenRequest], None]) -> None:
         self._cb = cb
         
     def close(self) -> None:
@@ -42,4 +42,4 @@ class Remote:
         param = p[1] if len(p) > 1 else None
         
         if self._cb is not None:
-            self._cb(RemoteRequest(req, param))
+            self._cb(TaskScreenRequest(req, param))

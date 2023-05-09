@@ -6,7 +6,7 @@ from websockets.exceptions import ConnectionClosedOK            # pyright: ignor
 from websockets.server import serve, WebSocketServerProtocol    # pyright: ignore
 from typing import Callable, Set, Optional, cast
 
-class Server:
+class WsServer:
     def __init__(self, cb: Callable[..., None]):
         self._isRunning = True
         self._cb = cb
@@ -29,17 +29,17 @@ class Server:
     # Internal
 
     def _start(self) -> None:
-        print('SRV: started')
+        print('WSS: started')
 
         try:
             asyncio.run(self._run_server())
         except Exception:
             logging.exception('start: asyncio.run')
 
-        print('SRV: closed')
+        print('WSS: closed')
         
     async def _client_connected(self, ws: WebSocketServerProtocol) -> None:
-        print('SRV: client connected')
+        print('WSS: client connected')
         
         self._clients.add(ws)
         
@@ -57,7 +57,7 @@ class Server:
                 
         self._clients.discard(ws)
         
-        print('SRV: client diconnected')
+        print('WSS: client diconnected')
             
     async def _run_server(self) -> None:
         async with serve(self._client_connected, "localhost", 15555):

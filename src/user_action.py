@@ -24,6 +24,8 @@ class ActionType(IntEnum):
     PRINT_INFO = 32
     TOGGLE_NIGHT = 33
     TOGGLE_MIRROR_DIMMING = 34
+    
+    DEBUG_TCP = 64
 
 class CarSpawningLocation:
     random = 'random'
@@ -78,7 +80,9 @@ class UserAction:
         pygame.constants.K_n: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_next_lane, 30)),
         pygame.constants.K_m: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_same_lane, 30)),
         pygame.constants.K_COMMA: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.random, 0)),
-        pygame.constants.K_BACKSLASH: Action(ActionType.TOGGLE_MIRROR_DIMMING)
+        pygame.constants.K_BACKSLASH: Action(ActionType.TOGGLE_MIRROR_DIMMING),
+
+        pygame.constants.K_F9: Action(ActionType.DEBUG_TCP),
     }
     
     @staticmethod
