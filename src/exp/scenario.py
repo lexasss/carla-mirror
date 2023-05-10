@@ -12,7 +12,6 @@ from src.exp.delayed_task import DelayedTask
 from src.exp.mirror_status import MirrorStatus, NetCmd
 
 from src.net.tcp_server import TcpServer
-from src.net.tcp_client import TcpClient
 
 REPETITIONS = 5
 DISTANCES = [5, 15, 25]
@@ -28,7 +27,6 @@ class Scenario:
     def __init__(self,
                  task_screen: TaskScreen,
                  cmd_server: Optional[TcpServer],
-                 cmd_client: Optional[TcpClient],
                  mirror_status: MirrorStatus) -> None:
         
         self.search_target_distance = 0.0
@@ -59,7 +57,6 @@ class Scenario:
         self._car_spawning_location_index = 0
 
         self._cmd_server = cmd_server
-        self._cmd_client = cmd_client
         
         self._is_running = False
         

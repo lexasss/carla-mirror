@@ -32,11 +32,7 @@ from src.mirror.base import Mirror
 
 from src.exp.logging import Logger
 from src.exp.scenario import Scenario
-from src.exp.task_screen import TaskScreen
-from src.exp.mirror_status import MirrorStatus
-
-from src.net.tcp_server import TcpServer
-from src.net.tcp_client import TcpClient
+from src.exp.scenario_env import ScenarioEnvironment
 
 class Finished(Exception):
     pass
@@ -68,7 +64,7 @@ class App:
         except:
             print(f'APP: CARLA is not running')
             mirror = self._create_mirror(settings)
-            self._show_blank_mirror(mirror, settings.server_host)
+            self._show_blank_mirror(mirror)
 
         else:
             runner: Optional[Runner] = None
@@ -91,7 +87,7 @@ class App:
             if mirror.camera:
                 self._spawned_actors.append(mirror.camera)
                 
-            self._show_carla_mirror(mirror, runner, settings.server_host)
+            self._show_carla_mirror(mirror, runner)
 
         finally:
             for actor in self._spawned_actors:
@@ -104,130 +100,93 @@ class App:
     def _run_loop(self,
                  sync_mode: CarlaSyncMode,
                  mirror: Mirror,
-                 runner: Optional[Runner],
-                 server_host: Optional[str]):
+                 runner: Optional[Runner]):
         clock = pygame.time.Clock()
 
-        tcp_server = TcpServer() if runner else None
-        tcp_client = TcpClient(server_host) if server_host else None
-        task_screen = TaskScreen() if runner else None
-        
-        mirror_status = MirrorStatus()
-        scenario = Scenario(task_screen, tcp_server, tcp_client, mirror_status) if task_screen else None
-        
-        if tcp_server:
-            tcp_server.start()
-        if tcp_client:
-            tcp_client.connect(mirror_status.handle_net_request)
-
         try:
-            while True:
-                action = UserAction.get()
+            with ScenarioEnvironment(runner is not None) as env:
+                scenario = env.scenario
                 
-                if scenario:
-                    scenario.tick()
-                    if action is None: 
-                        action = scenario.get_action()
-                        
-                self._handle_action(action, mirror, scenario, runner)
-
-                mirror_image: Optional[carla.Image] = None
-                spawned: Optional[carla.Actor] = None
-                
-                if not mirror_status.is_frozen:
-                    # Advance the simulation and wait for the data.
-                    queries = sync_mode.tick(5.0)
-                    if queries:
-                        snapshot, image = queries
-                        mirror_image = cast(carla.Image, image)
+                while True:
+                    action = UserAction.get()
                     
-                        if runner:
-                            carla_snapshot = cast(carla.WorldSnapshot, snapshot)
-                            spawned = runner.make_step(carla_snapshot, action)
+                    if scenario:
+                        scenario.tick()
+                        if action is None: 
+                            action = scenario.get_action()
                             
-                            if scenario:
-                                self._update_scenario_state(scenario, runner, carla_snapshot.find(runner.ego_car.id))
-                                if action:
-                                    scenario.report_action_result(action, spawned is not None)
+                    self._handle_action(action, mirror, scenario, runner)
 
-                if spawned:
-                    self._spawned_actors.append(spawned)
+                    mirror_image: Optional[carla.Image] = None
+                    spawned: Optional[carla.Actor] = None
+                    
+                    if not env.mirror_status.is_frozen:
+                        # Advance the simulation and wait for the data.
+                        queries = sync_mode.tick(5.0)
+                        if queries:
+                            snapshot, image = queries
+                            mirror_image = cast(carla.Image, image)
+                        
+                            if runner:
+                                carla_snapshot = cast(carla.WorldSnapshot, snapshot)
+                                spawned = runner.make_step(carla_snapshot, action)
+                                
+                                if scenario:
+                                    self._update_scenario_state(scenario, runner, carla_snapshot.find(runner.ego_car.id))
+                                    if action:
+                                        scenario.report_action_result(action, spawned is not None)
 
-                mirror.draw_image(mirror_image)
-                
-                pygame.display.flip()
-                
-                clock.tick(CarlaEnvironment.FPS)
+                    if spawned:
+                        self._spawned_actors.append(spawned)
+
+                    mirror.draw_image(mirror_image)
+                    
+                    pygame.display.flip()
+                    
+                    clock.tick(CarlaEnvironment.FPS)
         except Finished:
             pass
             
-        if task_screen:
-            task_screen.close()
-        if tcp_server:
-            tcp_server.close()
-        if tcp_client:
-            tcp_client.close()
-        
         self._remove_spawned(sync_mode)
 
     def _show_carla_mirror(self,
                            mirror: Mirror,
-                           runner: Optional[Runner],
-                           server_host: Optional[str]):
+                           runner: Optional[Runner]):
         try:
             with CarlaSyncMode(cast(carla.World, mirror.world),
                             CarlaEnvironment.FPS,
                             runner is not None,
                             cast(carla.Sensor, mirror.camera)) as sync_mode:     # Create a synchronous mode context.
-                self._run_loop(sync_mode, mirror, runner, server_host)
+                self._run_loop(sync_mode, mirror, runner)
         finally:
             time.sleep(0.5)
 
-    def _show_blank_mirror(self,
-                           mirror: Mirror,
-                           server_host: Optional[str]):
+    def _show_blank_mirror(self, mirror: Mirror):
         clock = pygame.time.Clock()
 
-        tcp_server = TcpServer() if not server_host else None
-        tcp_client = TcpClient(server_host) if server_host else None
-        task_screen = TaskScreen() if not server_host else None
+        with ScenarioEnvironment() as env:
+            scenario = env.scenario
         
-        mirror_status = MirrorStatus()
-        scenario = Scenario(task_screen, tcp_server, tcp_client, mirror_status) if task_screen else None
-        
-        if not scenario and tcp_client:
-            tcp_client.connect(mirror_status.handle_net_request)
+            while True:
+                action = UserAction.get()
+                if scenario:
+                    scenario.tick()
 
-        while True:
-            action = UserAction.get()
-            if scenario:
-                scenario.tick()
-
-            if action:
-                if action.type == ActionType.QUIT:
-                    break
-                elif action.type == ActionType.START_SCENARIO:
-                    if scenario:
-                        scenario.start()
-                elif action.type == ActionType.MOUSE:
-                    mirror.on_mouse(cast(str, action.param))
-                elif action.type == ActionType.DEBUG_TCP:
-                    if tcp_client:
-                        tcp_client.request('test\n')
-            elif scenario:
-                action = scenario.get_action()
-            
-            mirror.draw_image(None)
-            
-            pygame.display.flip()
-            clock.tick(CarlaEnvironment.FPS)
-
-        if task_screen:
-            task_screen.close()
-        if tcp_server:
-            tcp_server.close()
-        if tcp_client:
-            tcp_client.close()
+                if action:
+                    if action.type == ActionType.QUIT:
+                        break
+                    elif action.type == ActionType.START_SCENARIO:
+                        if scenario:
+                            scenario.start()
+                    elif action.type == ActionType.MOUSE:
+                        mirror.on_mouse(cast(str, action.param))
+                elif scenario:
+                    action = scenario.get_action()
+                
+                mirror.draw_image(None)
+                
+                pygame.display.flip()
+                clock.tick(CarlaEnvironment.FPS)
 
     def _create_mirror(self, settings: Settings, world: Optional[carla.World] = None, ego_car: Optional[carla.Vehicle] = None) -> Mirror:
         if settings.side == Side.WIDEVIEW:

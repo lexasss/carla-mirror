@@ -1,7 +1,6 @@
 import argparse
 
 from enum import Enum
-from typing import Optional
 
 class Side(Enum):
     LEFT = 'left'
@@ -10,18 +9,16 @@ class Side(Enum):
     TOPVIEW = 'topview' 
     FULLSCREEN = 'fullscreen'
 
-SERVER_SIDE = Side.LEFT
-
 class Settings:
     def __init__(self) -> None:
         args = make_args()
         
         self.size = [int(x) for x in args.res.split('x')]
-        self.fov = args.fov
-        self.town = args.town
-        self.host = args.host
+        self.fov: int = args.fov
+        self.town: str = args.town
+        self.host: str = args.host
         
-        self._cmd_host = args.cmdhost
+        self.server_host: str = args.srvhost
 
         if self.size[0] == 0 or self.size[1] == 0:
             self.size = None
@@ -32,10 +29,6 @@ class Settings:
         else:
             self.side = Side.LEFT
         
-    @property
-    def server_host(self) -> Optional[str]:
-        return self._cmd_host if self.side != SERVER_SIDE else None
-
 def make_args():
     argparser = argparse.ArgumentParser(
         description='CARLA mirror')
@@ -63,7 +56,7 @@ def make_args():
         default='localhost',
         help='Carla IP, or localhost')
     argparser.add_argument(
-        '--cmdhost',
+        '--srvhost',
         default='localhost',
         help='IP of the PC running the LEFT mirror, or localhost')
     

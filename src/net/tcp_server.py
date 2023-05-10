@@ -2,7 +2,8 @@ import threading
 
 from typing import Optional, Callable, Set, Any
 from socket import socket
-from simple_socket_server import SimpleSocketServer
+
+from src.net.seimple_socket_server import SimpleSocketServer
 
 PORT = 5030
 
@@ -36,6 +37,8 @@ class TcpServer:
         
     def start(self, cb: Optional[Callable[[str], None]] = None) -> None:
         self._cb = cb
+        self._server.initialize(port = PORT)
+        
         if self._thread is None:
             self._thread = threading.Thread(target = self._start)
             self._thread.start()
@@ -56,9 +59,6 @@ class TcpServer:
     def _start(self) -> None:
         print('TCS: started')
 
-        try:
-            self._server.run(host = '0.0.0.0', port = PORT)
-        except Exception:
-            pass
+        self._server.run()
 
         print('TCS: closed')
