@@ -5,14 +5,14 @@ from socket import socket
 
 from src.net.seimple_socket_server import SimpleSocketServer
 
-PORT = 5030
+PORT = 15554
 
 class TcpServer:
     def __init__(self) -> None:
         self._clients: Set[socket] = set()
         self._cb: Optional[Callable[[str], None]]
         
-        socket_server = SimpleSocketServer()
+        socket_server = SimpleSocketServer(port = PORT)
 
         @socket_server.on('connect')
         def on_connect(sock: socket, peer: Any): # pyright: ignore[ reportUnusedFunction ]
@@ -37,7 +37,7 @@ class TcpServer:
         
     def start(self, cb: Optional[Callable[[str], None]] = None) -> None:
         self._cb = cb
-        self._server.initialize(port = PORT)
+        self._server.initialize()
         
         if self._thread is None:
             self._thread = threading.Thread(target = self._start)

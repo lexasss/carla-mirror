@@ -21,11 +21,15 @@ class ActionType(IntEnum):
     FREEZE = 18
     UNFREEZE = 19
     
+    LANE_LEFT = 24
+    LANE_RIGHT = 25
+    
     PRINT_INFO = 32
     TOGGLE_NIGHT = 33
     TOGGLE_MIRROR_DIMMING = 34
     
     DEBUG_TCP = 64
+    DEBUG_TASK_SCREEN = 65
 
 class CarSpawningLocation:
     random = 'random'
@@ -33,24 +37,28 @@ class CarSpawningLocation:
     behind_same_lane = 'behind_same_lane'
 
 class Action:
-    def __init__(self, type: ActionType, param: Optional[Union[str, float, int, Tuple[Union[str, float, int], ...]]] = None):
+    def __init__(self, type: ActionType, param: Optional[Union[str, float, int, Tuple[Union[str, float, int, None], ...]]] = None):
         self.type = type
         self.param = param
 
 class DriverTask:
     TARGETS: Dict[str, str] = {
-        'bin': 'BIN',
-        'barrel': 'BARREL',
-        'clothcontainer': 'CLOTH CONTAINER',
-        'trashcan01': 'TRASH CAN',
-        'plastictable': 'PLASTIC TABLE',
-        'slide': 'KIDS` SLIDE',
-        'trampoline': 'TRAMPOLINE',
-        'travelcase': 'TRAVEL CASE',
+        # 'bin': 'BIN',
+        # 'barrel': 'BARREL',
+        'clothcontainer': 'GREEN CLOTH CONTAINER',
+        'glasscontainer': 'GREEN GLASS CONTAINER',
+        'trashcan05': 'WHITE TRASH CAN',
+        'plastictable': 'WHITE PLASTIC TABLE',
+        'slide': 'RED KIDS` SLIDE',
+        'swingcouch': 'BLUE SWING COUCH',
+        'trampoline': 'BLUE TRAMPOLINE',
+        'travelcase': 'LIME TRAVEL CASE',
         'trafficcone01': 'TRAFIC CONE',
-        'kiosk_01': 'KIOSK',
-        'advertisement': 'ADVERTISEMENT',
-        'mailbox': 'MAILBOX',
+        # 'kiosk_01': 'KIOSK',
+        'fountain': 'FOUNTAIN',
+        # 'advertisement': 'ADVERTISEMENT',
+        'mailbox': 'BLUE MAILBOX',
+        'vendingmachine': 'COLA VENDING MACHINE'
     }
 
 class UserAction:
@@ -81,8 +89,14 @@ class UserAction:
         pygame.constants.K_m: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_same_lane, 30)),
         pygame.constants.K_COMMA: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.random, 0)),
         pygame.constants.K_BACKSLASH: Action(ActionType.TOGGLE_MIRROR_DIMMING),
+        pygame.constants.K_LEFT: Action(ActionType.LANE_LEFT),
+        pygame.constants.K_RIGHT: Action(ActionType.LANE_RIGHT),
 
         pygame.constants.K_F9: Action(ActionType.DEBUG_TCP),
+        pygame.constants.K_u: Action(ActionType.DEBUG_TASK_SCREEN, ('button', 'Done')),
+        pygame.constants.K_i: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', True)),
+        pygame.constants.K_o: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', False)),
+        pygame.constants.K_p: Action(ActionType.DEBUG_TASK_SCREEN, ('message', 'Hello!', 'This is a message')),
     }
     
     @staticmethod

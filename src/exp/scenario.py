@@ -1,6 +1,7 @@
 import random
+import time
 
-from typing import Optional, List
+from typing import Optional, List, cast
 
 from queue import SimpleQueue
 
@@ -13,7 +14,7 @@ from src.exp.mirror_status import MirrorStatus, NetCmd
 
 from src.net.tcp_server import TcpServer
 
-REPETITIONS = 5
+REPETITIONS = 2
 DISTANCES = [5, 15, 25]
 SPAWN_VEHICLE_BEHIND = 30 # meters
 SPAWN_LOCATIONS = [
@@ -22,6 +23,8 @@ SPAWN_LOCATIONS = [
     CarSpawningLocation.random,
 ]
 SPAWN_PAUSE = 10.0
+MIN_EGOCAR_SPEED_TO_EVALUATE_LINE_CHANGE_SAFETY = 20.0
+MAX_TARGET_LIFESPAN = 120.0     # 2 minutes
 
 class Scenario:
     def __init__(self,
@@ -45,7 +48,7 @@ class Scenario:
         
         self._task_distances: List[float] = []
         self._task_distance_index = -1
-        self._task_distance = 0
+        self._task_distance = 0.0
         self._task_waiting_for_reply = False
         
         for _ in range(REPETITIONS):
@@ -57,6 +60,7 @@ class Scenario:
         self._car_spawning_location_index = 0
 
         self._cmd_server = cmd_server
+        self._target_timestamp = 0.0
         
         self._is_running = False
         
@@ -74,12 +78,12 @@ class Scenario:
             
         while not self._task_screen_requests.empty():
             request = self._task_screen_requests.get()
-            if request.req == TaskScreenRequests.target_noticed:
+            if request.type == TaskScreenRequests.target:
                 self._logger.log('target', 'noticed', f'{self.search_target_distance:.1f}')
                 self._spawn_random_target()
-            elif request.req == TaskScreenRequests.lane_change_evaluated:
+            elif request.type == TaskScreenRequests.questionnaire:
                 # we got a response to the questionnaire, lets resume driving
-                self._logger.log('evaluation', 'response', request.param)
+                self._logger.log('evaluation', 'response', request.data)
                 self._task_waiting_for_reply = False
                 self._controller_actions.put(Action(ActionType.UNFREEZE))
 
@@ -88,7 +92,8 @@ class Scenario:
                 else:
                     self._clear_tasks()
 
-                    self._delayed_tasks.append(DelayedTask(0.3, self._task_screen.show_message, 'Done!\nThank you!'))
+                    self._delayed_tasks.append(DelayedTask(0.3, self._task_screen.show_message, ['Done!', 'Thank you!']))
+                    self._delayed_tasks.append(DelayedTask(0.8, self._task_screen.hide_button))
                     self._delayed_tasks.append(DelayedTask(1.5, self._controller_actions.put, Action(ActionType.STOP_SCENARIO)))
 
                     self._logger.log('done')
@@ -97,7 +102,12 @@ class Scenario:
                 self._delayed_tasks.append(DelayedTask(0.5, self._task_screen.hide_questionnaire))
                 self._delayed_tasks.append(DelayedTask(1.0, self._continue_driving))
             else:
-                print(f'SCN: unknown request: {request.req} ({request.param})')
+                print(f'SCN: unknown request: {request.type} ({request.data})')
+                
+        if (self._target_timestamp > 0.0 and time.perf_counter() - self._target_timestamp) > MAX_TARGET_LIFESPAN:
+            self._target_timestamp = 0.0
+            self._controller_actions.put(Action(ActionType.REMOVE_TARGETS))
+            self._delayed_tasks.append(DelayedTask(0.5, self._spawn_random_target))
     
     def get_action(self) -> Optional[Action]:
         if not self._controller_actions.empty():
@@ -105,12 +115,12 @@ class Scenario:
             print(f'SCN: action {result.type} ({result.param})')
             return result
         
-    def set_nearest_vehicle_behind(self, name: str, disatnce: float, lane: str) -> bool:
+    def set_nearest_vehicle_behind(self, name: str, disatnce: float, lane: str, ego_car_speed: float) -> bool:
         if not self._is_running:
             return False
         
         if not self._task_waiting_for_reply:
-            if abs(disatnce - self._task_distance) < 0.5:   # we compare against some range, i.e. plus-minus N, not exact N = 0
+            if ego_car_speed > MIN_EGOCAR_SPEED_TO_EVALUATE_LINE_CHANGE_SAFETY and abs(disatnce - self._task_distance) < 0.5:   # we compare against some range, i.e. plus-minus N, not exact N = 0
                 self._clear_tasks()
 
                 self._task_waiting_for_reply = True
@@ -133,6 +143,22 @@ class Scenario:
         return False
     
     def report_action_result(self, action: Action, has_spawned: bool):
+        if action.type == ActionType.DEBUG_TASK_SCREEN:
+            if isinstance(action.param, tuple):
+                cmd, *args = action.param
+                if cmd == 'button':
+                    caption = cast(str, args[0])
+                    self._task_screen.show_button(caption)
+                elif cmd == 'quest':
+                    is_visible = cast(bool, args[0])
+                    if is_visible:
+                        self._task_screen.show_questionnaire()
+                    else:
+                        self._task_screen.hide_questionnaire()
+                elif cmd == 'message':
+                    msg = cast(List[str], args)
+                    self._task_screen.show_message(msg)
+
         if not self._is_running:
             return
         
@@ -148,7 +174,10 @@ class Scenario:
                 self._delayed_tasks.append(DelayedTask(SPAWN_PAUSE, self._spawn_next_car))
             else:
                 self._delayed_tasks.append(DelayedTask(1.0, self._spawn_next_car))
-                
+        elif action.type == ActionType.START_SCENARIO:
+            pass
+        elif action.type == ActionType.STOP_SCENARIO:
+            self._delayed_tasks.append(DelayedTask(1.0, self._task_screen.hide_button))
     
     # Internal
 
@@ -157,9 +186,13 @@ class Scenario:
 
         name = '_'.join(target_id.split('.')[1:])
         self._logger.log('target', 'spawned', name)
+        
+        self._target_timestamp = time.perf_counter()
+        print('\007')
 
         self._controller_actions.put(Action(ActionType.SPAWN_TARGET, target_id))
-        self._delayed_tasks.append(DelayedTask(1.0, self._task_screen.show_message, f'Please find "{DriverTask.TARGETS[target_id]}"'))
+        self._delayed_tasks.append(DelayedTask(1.0, self._task_screen.show_message, ['Please find', f'{DriverTask.TARGETS[target_id]}']))
+        self._delayed_tasks.append(DelayedTask(3.0, self._task_screen.show_button))
         
     def _spawn_next_car(self) -> None:
         param = (SPAWN_LOCATIONS[self._car_spawning_location_index], SPAWN_VEHICLE_BEHIND)
@@ -184,7 +217,7 @@ class Scenario:
             self._cmd_server.send(NetCmd.show_mirror)
         
     def _clear_tasks(self) -> None:
-        print(f'Cancelling {len(self._delayed_tasks)} tasks')
+        print(f'[SCN] Cancelling {len(self._delayed_tasks)} tasks')
         for task in self._delayed_tasks:
             task.cancel()
         self._delayed_tasks.clear()

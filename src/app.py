@@ -106,6 +106,7 @@ class App:
         try:
             with ScenarioEnvironment(runner is not None) as env:
                 scenario = env.scenario
+                timeout = 5.0 if scenario else 0.2
                 
                 while True:
                     action = UserAction.get()
@@ -122,7 +123,7 @@ class App:
                     
                     if not env.mirror_status.is_frozen:
                         # Advance the simulation and wait for the data.
-                        queries = sync_mode.tick(5.0)
+                        queries = sync_mode.tick(timeout)
                         if queries:
                             snapshot, image = queries
                             mirror_image = cast(carla.Image, image)
@@ -180,6 +181,9 @@ class App:
                             scenario.start()
                     elif action.type == ActionType.MOUSE:
                         mirror.on_mouse(cast(str, action.param))
+                    elif action.type == ActionType.DEBUG_TASK_SCREEN:
+                        if scenario:
+                            scenario.report_action_result(action, False)
                 elif scenario:
                     action = scenario.get_action()
                 
@@ -228,9 +232,9 @@ class App:
                                runner: Runner,
                                ego_car_snapshot: carla.ActorSnapshot) -> None:
         scenario.search_target_distance = runner.get_distance_to_search_target(ego_car_snapshot)
-        vehicle, distance, lane = runner.get_nearest_vehicle_behind(ego_car_snapshot)
+        vehicle, distance, lane, ego_car_speed = runner.get_nearest_vehicle_behind(ego_car_snapshot)
         if vehicle and lane:
-            scenario.set_nearest_vehicle_behind(vehicle.type_id, distance, lane)
+            scenario.set_nearest_vehicle_behind(vehicle.type_id, distance, lane, ego_car_speed)
         
     def _remove_spawned(self, sync_mode: CarlaSyncMode):
         actors = [x for x in self._spawned_actors if not x.type_id.startswith('sensor.')]

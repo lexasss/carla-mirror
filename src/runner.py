@@ -37,6 +37,8 @@ class Runner:
         
         self._search_target: Optional[carla.Actor] = None
         self._last_vehicle: Optional[carla.Vehicle] = None
+        
+        self._ego_car_speed = 0.0
         # self._next_search_time: float = 0
         # self._approaching_vehicle: Optional[str] = None
         # self._blocking_window: Optional[Window] = None
@@ -65,18 +67,20 @@ class Runner:
                 if action.type == ActionType.SPAWN_CAR:
                     self._last_vehicle = cast(carla.Vehicle, spawned)
 
+        self._ego_car_speed = 3.6 * ego_car_snapshot.get_velocity().length()
+
         # update display
-        self.controller.display_speed(ego_car_snapshot)
+        self.controller.display_speed(ego_car_snapshot, self._ego_car_speed)
         self.controller.update_info(ego_car_snapshot)
         
         if self._search_target:
             self.controller.display_target_info(ego_car_snapshot, self._search_target)
-        if self._last_vehicle:
-            self.controller.display_vehicle_info(ego_car_snapshot, self._last_vehicle)
+        # if self._last_vehicle:
+        #     self.controller.display_vehicle_info(ego_car_snapshot, self._last_vehicle)
 
         return spawned
     
-    def get_nearest_vehicle_behind(self, ego_car_snapshot: carla.ActorSnapshot) -> Tuple[Optional[carla.Vehicle], float, Optional[str]]:
+    def get_nearest_vehicle_behind(self, ego_car_snapshot: carla.ActorSnapshot) -> Tuple[Optional[carla.Vehicle], float, Optional[str], float]:
         actors = self.world.get_actors().filter('vehicle.*')
         vehicles = cast(List[carla.Vehicle], actors)
         
@@ -93,7 +97,8 @@ class Runner:
                 car = vehicle
 
         lane = self._get_lane(ego_car_snapshot, car)
-        return car, min_distance, lane
+        
+        return car, min_distance, lane, self._ego_car_speed
     
     def get_distance_to_search_target(self, ego_car_snapshot: carla.ActorSnapshot) -> float:
         if self._search_target is None:
@@ -132,7 +137,7 @@ class Runner:
     #         self.carla_controller.display_info(ego_car_snapshot, f'{self._approaching_vehicle} is approaching the ego car')
     
     # Internal
-        
+            
     def _execute_action(self,
                         action: Action,
                         ego_car_snapshot: carla.ActorSnapshot) -> Optional[carla.Actor]:
@@ -171,6 +176,13 @@ class Runner:
             self.controller.display_info(ego_car_snapshot, 'CLOSED')
         elif action.type == ActionType.UNFREEZE:
             self.controller.display_info(ego_car_snapshot, 'OPENED')
+
+        elif action.type == ActionType.LANE_LEFT:
+            self.vehicle_factory.traffic_manager.force_lane_change(self.ego_car, False)
+            print('left')
+        elif action.type == ActionType.LANE_RIGHT:
+            self.vehicle_factory.traffic_manager.force_lane_change(self.ego_car, True)
+            print('right')
 
         if spawned:
             evt = str(action.type).split('.')[1].split('_')[1].lower()

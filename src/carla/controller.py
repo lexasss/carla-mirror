@@ -28,8 +28,9 @@ class CarlaController:
         display_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, DISPLAY_X, DISPLAY_Y, DISPLAY_Z - 0 * DISPLAY_LINE_HEIGHT)
 
         name = target.type_id.split('.')[2]
-        dist = CarlaController.get_distance_to(ego_car_snapshot, target)
-        self.debug.draw_string(display_location, f'{name} is {dist:.2f} m away', color = DISPLAY_ACTOR_INFO_COLOR)
+        # dist = CarlaController.get_distance_to(ego_car_snapshot, target)
+        # self.debug.draw_string(display_location, f'{name} is {dist:.2f} m away', color = DISPLAY_ACTOR_INFO_COLOR)
+        self.debug.draw_string(display_location, f'Target: {name.upper()}', color = DISPLAY_ACTOR_INFO_COLOR)
 
     def display_vehicle_info(self, ego_car_snapshot: carla.ActorSnapshot, vehicle: carla.Vehicle) -> None:
         display_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, DISPLAY_X, DISPLAY_Y, DISPLAY_Z - 1 * DISPLAY_LINE_HEIGHT)
@@ -39,13 +40,12 @@ class CarlaController:
         dist = CarlaController.get_distance_to(ego_car_snapshot, vehicle)
         self.debug.draw_string(display_location, f'{name} at {dist:.1f} m, moving {velocity:.1f} km/h', color = DISPLAY_ACTOR_INFO_COLOR)
 
-    def display_speed(self, ego_car_snapshot: carla.ActorSnapshot) -> None:
+    def display_speed(self, ego_car_snapshot: carla.ActorSnapshot, speed: float) -> None:
         display_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, DISPLAY_X, DISPLAY_Y, DISPLAY_Z - 2 * DISPLAY_LINE_HEIGHT)
-
-        speed = 3.6 * ego_car_snapshot.get_velocity().length()
         self.debug.draw_string(display_location, f'{speed:.1f} km/h', color = DISPLAY_EGOCAR_INFO_COLOR)
 
     def display_info(self, ego_car_snapshot: carla.ActorSnapshot, text: Optional[str] = None) -> None:
+        print(text)
         self._info = text
         self.update_info(ego_car_snapshot)
 
@@ -54,7 +54,7 @@ class CarlaController:
             display_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, DISPLAY_X, DISPLAY_Y, DISPLAY_Z - 3 * DISPLAY_LINE_HEIGHT)
             self.debug.draw_string(display_location, self._info, color = DISPLAY_EXP_INFO_COLOR, life_time = -1)
 
-    # Other display
+    # Other visible cues
     
     def display_direction_to(self, ego_car_snapshot: carla.ActorSnapshot, actor: carla.Actor) -> None:
         ego_car_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, 3, 0.05, -0.26)
@@ -83,6 +83,8 @@ class CarlaController:
                 continue
             
             vehicle = vehicle_factory.make_vehicle(False, vehicle_transform)
+            
+        vehicle_factory.configure_traffic_vehicle(vehicle)
             
         return vehicle
         

@@ -1,5 +1,7 @@
 # coding=utf8
 """
+Based on pip/simple_socket_server:
+
 Simple TCP socket server with select
 Copyright (c) 2023 webtoucher
 Distributed under the BSD 3-Clause license. See LICENSE for more info.
@@ -30,24 +32,24 @@ class SimpleSocketServerException(socket.error):
 
 
 class SimpleSocketServer(EventBus, metaclass=_Singleton):
-    def __init__(self):
+    def __init__(self, host: str = '0.0.0.0', port: int = 6666, max_conn: int = 5):
         super().__init__()
-        self.__host = None
-        self.__port = None
-        self.__max_conn = 5
-        self.__inputs: List[Any] = []
-        self.__outputs: List[Any] = []
-        self.__messages: Dict[socket.socket, queue.Queue[bytes]] = {}
-        self.__clients: Dict[socket.socket, Tuple[str, int]] = {}
-        self.__initialized = False
 
-    def initialize(self, host: str = '0.0.0.0', port: int = 6666, max_conn: int = 5):
-        if self.__initialized:
-            return
-        
         self.__host = host
         self.__port = port
         self.__max_conn = max_conn
+
+        self.__inputs: List[socket.socket] = []
+        self.__outputs: List[socket.socket] = []
+        self.__messages: Dict[socket.socket, queue.Queue[bytes]] = {}
+        self.__clients: Dict[socket.socket, Tuple[str, int]] = {}
+        
+        self.__initialized = False
+
+    def initialize(self):
+        if self.__initialized:
+            return
+        
         self.__inputs = []
         self.__outputs = []
         self.__messages = {}
@@ -69,8 +71,12 @@ class SimpleSocketServer(EventBus, metaclass=_Singleton):
                 self.__inputs,
                 0.1,
             )
-            self.__read_socket(sock_to_read)
-            self.__write_socket(sock_to_write)
+            try:
+                self.__read_socket(sock_to_read)
+                self.__write_socket(sock_to_write)
+            except:
+                break
+            
             self.__exception_socket(sock_errors)
             time.sleep(0.1)
 

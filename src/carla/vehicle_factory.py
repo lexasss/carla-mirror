@@ -54,6 +54,8 @@ class VehicleFactory:
             while vehicle is None:
                 vehicle = self.make_vehicle(True)
                 time.sleep(0.5)
+            self.traffic_manager.ignore_lights_percentage(vehicle, 100)
+            # self.traffic_manager.keep_right_rule_percentage(vehicle, 50)
             return (vehicle, True)
         else:
             print(f'CVF: Found a vehicle, attaching the mirror')
@@ -89,9 +91,6 @@ class VehicleFactory:
         if vehicle_bp.has_attribute('color'):
             color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
             vehicle_bp.set_attribute('color', color)
-        # if vehicle_bp.has_attribute('driver_id'):
-        #     driver_id = random.choice(vehicle_bp.get_attribute('driver_id').recommended_values)
-        #     vehicle_bp.set_attribute('driver_id', driver_id)
 
         try:
             vehicle = cast(carla.Vehicle, self.world.spawn_actor(vehicle_bp, transform))
