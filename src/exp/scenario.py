@@ -120,7 +120,7 @@ class Scenario:
             return False
         
         if not self._task_waiting_for_reply:
-            if ego_car_speed > MIN_EGOCAR_SPEED_TO_EVALUATE_LINE_CHANGE_SAFETY and abs(disatnce - self._task_distance) < 0.5:   # we compare against some range, i.e. plus-minus N, not exact N = 0
+            if ego_car_speed > MIN_EGOCAR_SPEED_TO_EVALUATE_LINE_CHANGE_SAFETY and disatnce < self._task_distance:
                 self._clear_tasks()
 
                 self._task_waiting_for_reply = True

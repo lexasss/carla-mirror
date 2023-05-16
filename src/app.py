@@ -130,10 +130,10 @@ class App:
                         
                             if runner:
                                 carla_snapshot = cast(carla.WorldSnapshot, snapshot)
-                                spawned = runner.make_step(carla_snapshot, action)
+                                ego_car_snapshot, spawned = runner.make_step(carla_snapshot, action)
                                 
                                 if scenario:
-                                    self._update_scenario_state(scenario, runner, carla_snapshot.find(runner.ego_car.id))
+                                    self._update_scenario_state(scenario, runner, ego_car_snapshot)
                                     if action:
                                         scenario.report_action_result(action, spawned is not None)
 
@@ -232,9 +232,11 @@ class App:
                                runner: Runner,
                                ego_car_snapshot: carla.ActorSnapshot) -> None:
         scenario.search_target_distance = runner.get_distance_to_search_target(ego_car_snapshot)
-        vehicle, distance, lane, ego_car_speed = runner.get_nearest_vehicle_behind(ego_car_snapshot)
-        if vehicle and lane:
-            scenario.set_nearest_vehicle_behind(vehicle.type_id, distance, lane, ego_car_speed)
+        vehicle, distance = runner.get_nearest_vehicle_behind(ego_car_snapshot)
+        if vehicle:
+            lane = runner.get_lane(ego_car_snapshot, vehicle)
+            if lane:
+                scenario.set_nearest_vehicle_behind(vehicle.type_id, distance, lane, runner.ego_car_speed)
         
     def _remove_spawned(self, sync_mode: CarlaSyncMode):
         actors = [x for x in self._spawned_actors if not x.type_id.startswith('sensor.')]

@@ -37,7 +37,7 @@ class Runner:
         self._search_target: Optional[carla.Actor] = None
         self._last_vehicle: Optional[carla.Vehicle] = None
         
-        self._ego_car_speed = 0.0
+        self.ego_car_speed = 0.0
         # self._next_search_time: float = 0
         # self._approaching_vehicle: Optional[str] = None
         # self._blocking_window: Optional[Window] = None
@@ -46,7 +46,7 @@ class Runner:
         
     def make_step(self,
                   world_snapshot: carla.WorldSnapshot,
-                  action: Optional[Action]) -> Optional[carla.Actor]:
+                  action: Optional[Action]) -> Tuple[carla.ActorSnapshot, Optional[carla.Actor]]:
         spawned: Optional[carla.Actor] = None
 
         # create traffic at random moments/locations
@@ -66,10 +66,10 @@ class Runner:
                 if action.type == ActionType.SPAWN_CAR:
                     self._last_vehicle = cast(carla.Vehicle, spawned)
 
-        self._ego_car_speed = 3.6 * ego_car_snapshot.get_velocity().length()
+        self.ego_car_speed = 3.6 * ego_car_snapshot.get_velocity().length()
 
         # update display
-        self.controller.display_speed(ego_car_snapshot, self._ego_car_speed)
+        self.controller.display_speed(ego_car_snapshot, self.ego_car_speed)
         self.controller.update_info(ego_car_snapshot)
         
         if self._search_target:
@@ -77,9 +77,15 @@ class Runner:
         # if self._last_vehicle:
         #     self.controller.display_vehicle_info(ego_car_snapshot, self._last_vehicle)
 
-        return spawned
+        return ego_car_snapshot, spawned
     
-    def get_nearest_vehicle_behind(self, ego_car_snapshot: carla.ActorSnapshot) -> Tuple[Optional[carla.Vehicle], float, Optional[str], float]:
+    def get_distance_to_search_target(self, ego_car_snapshot: carla.ActorSnapshot) -> float:
+        if self._search_target is None:
+            return 0
+        
+        return self.controller.get_distance_to(ego_car_snapshot, self._search_target)
+    
+    def get_nearest_vehicle_behind(self, ego_car_snapshot: carla.ActorSnapshot) -> Tuple[Optional[carla.Vehicle], float]:
         actors = self.world.get_actors().filter('vehicle.*')
         vehicles = cast(List[carla.Vehicle], actors)
         
@@ -95,16 +101,33 @@ class Runner:
                 min_distance = distance
                 car = vehicle
 
-        lane = self._get_lane(ego_car_snapshot, car)
-        
-        return car, min_distance, lane, self._ego_car_speed
+        return car, min_distance
     
-    def get_distance_to_search_target(self, ego_car_snapshot: carla.ActorSnapshot) -> float:
-        if self._search_target is None:
-            return 0
+    def get_lane(self, ego_car_snapshot: carla.ActorSnapshot, other_car: Optional[carla.Vehicle]) -> Optional[str]:
+        if other_car is None:
+            return None
         
-        return self.controller.get_distance_to(ego_car_snapshot, self._search_target)
+        map = self.world.get_map()
+        
+        ego_car_tranform = ego_car_snapshot.get_transform()
+        ego_car_waypoint = map.get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
+        
+        vehicle_tranform = other_car.get_transform()
+        vehicle_waypoint = map.get_waypoint(vehicle_tranform.location, True, carla.LaneType.Driving)
+        
+        if ego_car_waypoint is None or vehicle_waypoint is None:
+            return None
 
+        ego_car_lane = abs(ego_car_waypoint.lane_id)
+        vehicle_lane = abs(vehicle_waypoint.lane_id)
+        
+        if ego_car_lane < vehicle_lane:
+            return 'left'
+        elif ego_car_lane > vehicle_lane:
+            return 'right'
+        else:
+            return 'behind'
+        
     # def check_traffic_event(self, ego_car_snapshot: carla.ActorSnapshot) -> None:
     #     if time.time() > self._next_search_time:
     #         actors = self.world.get_actors().filter('vehicle.*')
@@ -235,29 +258,3 @@ class Runner:
             return False, 0
         
         return True, dist
-    
-    def _get_lane(self, ego_car_snapshot: carla.ActorSnapshot, other_car: Optional[carla.Vehicle]) -> Optional[str]:
-        if other_car is None:
-            return None
-        
-        map = self.world.get_map()
-        
-        ego_car_tranform = ego_car_snapshot.get_transform()
-        ego_car_waypoint = map.get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
-        
-        vehicle_tranform = other_car.get_transform()
-        vehicle_waypoint = map.get_waypoint(vehicle_tranform.location, True, carla.LaneType.Driving)
-        
-        if ego_car_waypoint is None or vehicle_waypoint is None:
-            return None
-
-        ego_car_lane = abs(ego_car_waypoint.lane_id)
-        vehicle_lane = abs(vehicle_waypoint.lane_id)
-        
-        if ego_car_lane < vehicle_lane:
-            return 'left'
-        elif ego_car_lane > vehicle_lane:
-            return 'right'
-        else:
-            return 'behind'
-        
