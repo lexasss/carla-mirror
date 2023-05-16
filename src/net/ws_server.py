@@ -2,8 +2,8 @@ import logging
 import queue
 import asyncio, threading
 
-from websockets.exceptions import ConnectionClosedOK            # pyright: ignore
-from websockets.server import serve, WebSocketServerProtocol    # pyright: ignore
+from websockets.exceptions import ConnectionClosedOK
+from websockets.server import serve, WebSocketServerProtocol
 from typing import Callable, Set, Optional, cast
 
 class WsServer:

@@ -77,13 +77,16 @@ class Mirror:
             self._display.fill(Mirror.MASK_TRANSPARENT_COLOR)
             
             # draw a matrix of circles, so we can inpect how the view is distorted in the shader
-            MATRIX_SIZE = (20, 5)
-            cell_width = self.width/MATRIX_SIZE[0]
-            cell_height = self.height/MATRIX_SIZE[1]
-            for i in range(MATRIX_SIZE[0]):
-                for j in range(MATRIX_SIZE[1]):
+            CELL_SIZE = 50
+            row_count = round(self.height / CELL_SIZE)
+            col_count = round(self.width / CELL_SIZE)
+            
+            cell_width = self.width / col_count
+            cell_height = self.height / row_count
+            for i in range(col_count):
+                for j in range(row_count):
                     x = (i + 0.5) * cell_width
-                    y = (j + 0.5) * cell_height
+                    y = (j + 0.5) * cell_height            
                     pygame.draw.circle(self._display, (255,0,255), (x,y), 10)
 
         if self._mask:

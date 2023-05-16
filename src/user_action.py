@@ -45,20 +45,20 @@ class DriverTask:
     TARGETS: Dict[str, str] = {
         # 'bin': 'BIN',
         # 'barrel': 'BARREL',
-        'clothcontainer': 'GREEN CLOTH CONTAINER',
-        'glasscontainer': 'GREEN GLASS CONTAINER',
-        'trashcan05': 'WHITE TRASH CAN',
-        'plastictable': 'WHITE PLASTIC TABLE',
-        'slide': 'RED KIDS` SLIDE',
-        'swingcouch': 'BLUE SWING COUCH',
-        'trampoline': 'BLUE TRAMPOLINE',
-        'travelcase': 'LIME TRAVEL CASE',
+        'clothcontainer': 'CLOTH CONTAINER',
+        'glasscontainer': 'GLASS CONTAINER',
+        'trashcan05': 'TRASH CAN',
+        'plastictable': 'PLASTIC TABLE',
+        'slide': 'SLIDE',
+        'swingcouch': 'SWING COUCH',
+        'trampoline': 'TRAMPOLINE',
+        'travelcase': 'TRAVEL CASE',
         'trafficcone01': 'TRAFIC CONE',
         # 'kiosk_01': 'KIOSK',
         'fountain': 'FOUNTAIN',
         # 'advertisement': 'ADVERTISEMENT',
-        'mailbox': 'BLUE MAILBOX',
-        'vendingmachine': 'COLA VENDING MACHINE'
+        'mailbox': 'MAILBOX',
+        'vendingmachine': 'VENDING MACHINE'
     }
 
 class UserAction:
@@ -96,7 +96,7 @@ class UserAction:
         pygame.constants.K_u: Action(ActionType.DEBUG_TASK_SCREEN, ('button', 'Done')),
         pygame.constants.K_i: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', True)),
         pygame.constants.K_o: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', False)),
-        pygame.constants.K_p: Action(ActionType.DEBUG_TASK_SCREEN, ('message', 'Hello!', 'This is a message')),
+        pygame.constants.K_p: Action(ActionType.DEBUG_TASK_SCREEN, ('message', 'Find something', DriverTask.TARGETS['trashcan05'])),
     }
     
     @staticmethod

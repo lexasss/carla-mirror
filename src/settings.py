@@ -17,6 +17,8 @@ class Settings:
         self.fov: int = args.fov
         self.town: str = args.town
         self.host: str = args.host
+        self.pitch = int(args.pitch) if args.pitch != '' else None
+        self.distort: bool = args.distort == True
         
         self.server_host: str = args.srvhost
 
@@ -42,6 +44,15 @@ def make_args():
         default=65,
         type=int,
         help='FOV for camera')
+    argparser.add_argument(
+        '--pitch',
+        default='',
+        type=str,
+        help='Camera pitch')
+    argparser.add_argument(
+        '--distort',
+        action='store_true',
+        help='Camera pitch')
     argparser.add_argument(
         '--res',
         metavar='WIDTHxHEIGHT',

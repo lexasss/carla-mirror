@@ -1,8 +1,12 @@
 # Experiment controller for CARLA drivers
 
+## Requires
+
+Python 3.7
+
 ## Setup
 
-CARLA PythonAPI is expected in `../carla/dist` relative to this project
+CARLA PythonAPI is expected to be in `../carla/dist` relative to this project
 
 ### Configuring Pylance (`Python > Analysis`)
 
@@ -12,32 +16,11 @@ It is expected that
 - `Type Checking Mode` = `strict`
 - `Stub Path` = `typings`
 
-## Requires
+### External dependencies
 
-- python@3.7
+- [glslViewer](https://github.com/patriciogonzalezvivo/glslViewer) to inspect the shader (run `glslViewer ./shaders/zoom_x.frag "path/to/some/image.png"`)
+- [glslang@12.1](https://github.com/KhronosGroup/glslang) for GLSL Linter extension to be set in `Validator Path` in its settings (clone this repo)
 
-### pip
+### PIP virtual environment
 
-- event-bus@1.0
-- jsonpickle@3.0
-- moderngl@5.8
-- numpy@1.21
-- pygame@2.2
-- pywin32@305
-- pywin32-stubs@1.0
-- websockets@11.0
-
-### external
-
-- [glslViewer](https://github.com/patriciogonzalezvivo/glslViewer) to inspect the shader (`glslViewer ./shaders/zoom_x.frag "path/to/some/image.png"`)
-- [glslang@12.1](https://github.com/KhronosGroup/glslang) for GLSL Linter extension to be set in `Validator Path` in its settings
-
-May also require
-
-### pip
-
-- Pillow@9.4
-- mypy@1.1
-- mypy-extensions@1.0
-- typing_extensions@4.5
-- data-science-types@0.2
+Activate the virtual environment by launching `run_env.bat` from the VS Code terminal

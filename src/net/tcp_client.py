@@ -1,5 +1,4 @@
 from typing import Optional, Callable
-# from simple_socket_client import SimpleSocketClient
 
 from src.net.tcp_server import PORT
 from src.net.simple_socket_client import SimpleSocketClient

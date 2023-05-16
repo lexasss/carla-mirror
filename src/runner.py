@@ -1,6 +1,5 @@
 import carla
 import math
-# import time
 import sys
 
 from typing import Optional, List, Tuple, cast
@@ -137,7 +136,7 @@ class Runner:
     #         self.carla_controller.display_info(ego_car_snapshot, f'{self._approaching_vehicle} is approaching the ego car')
     
     # Internal
-            
+
     def _execute_action(self,
                         action: Action,
                         ego_car_snapshot: carla.ActorSnapshot) -> Optional[carla.Actor]:
