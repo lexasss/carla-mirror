@@ -43,6 +43,7 @@ class Runner:
         # self._blocking_window: Optional[Window] = None
         
         self._last_vehicle: Optional[carla.Vehicle] = None
+        self._spectator_is_driver = True
 
         self._logger = EventLogger('spawner')
         
@@ -57,7 +58,8 @@ class Runner:
         ego_car_snapshot = world_snapshot.find(self.ego_car.id)
 
         # spectator is sitting in the car, and we have to move it manually as there is no way to bind it to the ego-car
-        self.environment.relocate_spectator(self.spectator, ego_car_snapshot)
+        if self._spectator_is_driver:
+            CarlaEnvironment.relocate_spectator(self.spectator, ego_car_snapshot)
 
         # respond to a keypress
         if action:
@@ -154,10 +156,11 @@ class Runner:
 
         elif action.type == ActionType.LANE_LEFT:
             self.vehicle_factory.traffic_manager.force_lane_change(self.ego_car, False)
-            print('left')
         elif action.type == ActionType.LANE_RIGHT:
             self.vehicle_factory.traffic_manager.force_lane_change(self.ego_car, True)
-            print('right')
+
+        elif action.type == ActionType.TOGGLE_SPECTATOR_AS_DRIVER:
+            self._spectator_is_driver = not self._spectator_is_driver
 
         if spawned:
             evt = str(action.type).split('.')[1].split('_')[1].lower()

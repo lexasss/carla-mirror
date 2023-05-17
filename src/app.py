@@ -42,8 +42,6 @@ class App:
     def __init__(self):
         self._spawned_actors: List[carla.Actor] = []
         
-        self._logger = EventLogger('app')
-        
         CarlaEnvironment.set_driver_offset(VehicleFactory.EGO_CAR_TYPE)
         SideMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
         FullscreenMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
@@ -54,6 +52,8 @@ class App:
 
         pygame.init()
 
+        self._logger = EventLogger('app')
+        
         client = carla.Client(settings.host, 2000)
         client.set_timeout(5.0)
         

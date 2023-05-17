@@ -27,6 +27,7 @@ class ActionType(IntEnum):
     PRINT_INFO = 32
     TOGGLE_NIGHT = 33
     TOGGLE_MIRROR_DIMMING = 34
+    TOGGLE_SPECTATOR_AS_DRIVER = 35
     
     DEBUG_TCP = 64
     DEBUG_TASK_SCREEN = 65
@@ -64,12 +65,14 @@ class DriverTask:
 class UserAction:
     SHORTCUTS: Dict[int, Action] = {
         pygame.constants.K_ESCAPE: Action(ActionType.QUIT),
+        
         pygame.constants.K_F1: Action(ActionType.START_SCENARIO),
         pygame.constants.K_F2: Action(ActionType.STOP_SCENARIO),
         pygame.constants.K_F3: Action(ActionType.FREEZE),
         pygame.constants.K_F4: Action(ActionType.UNFREEZE),
         pygame.constants.K_F5: Action(ActionType.REMOVE_TARGETS),
         pygame.constants.K_F6: Action(ActionType.REMOVE_CARS),
+        
         pygame.constants.K_1: Action(ActionType.SPAWN_TARGET, 'bin'),
         pygame.constants.K_2: Action(ActionType.SPAWN_TARGET, 'barrel'),
         pygame.constants.K_3: Action(ActionType.SPAWN_TARGET, 'clothcontainer'),
@@ -83,8 +86,11 @@ class UserAction:
         pygame.constants.K_q: Action(ActionType.SPAWN_TARGET, 'kiosk_01'),
         pygame.constants.K_w: Action(ActionType.SPAWN_TARGET, 'advertisement'),
         pygame.constants.K_e: Action(ActionType.SPAWN_TARGET, 'mailbox'),
+        
         pygame.constants.K_x: Action(ActionType.PRINT_INFO),
         pygame.constants.K_c: Action(ActionType.TOGGLE_NIGHT),
+        pygame.constants.K_s: Action(ActionType.TOGGLE_SPECTATOR_AS_DRIVER),
+        
         pygame.constants.K_n: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_next_lane, 30)),
         pygame.constants.K_m: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_same_lane, 30)),
         pygame.constants.K_COMMA: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.random, 0)),
@@ -93,6 +99,7 @@ class UserAction:
         pygame.constants.K_RIGHT: Action(ActionType.LANE_RIGHT),
 
         pygame.constants.K_F9: Action(ActionType.DEBUG_TCP),
+        
         pygame.constants.K_u: Action(ActionType.DEBUG_TASK_SCREEN, ('button', 'Done')),
         pygame.constants.K_i: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', True)),
         pygame.constants.K_o: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', False)),

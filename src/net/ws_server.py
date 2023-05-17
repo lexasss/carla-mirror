@@ -60,7 +60,7 @@ class WsServer:
         print('WSS: client diconnected')
             
     async def _run_server(self) -> None:
-        async with serve(self._client_connected, "localhost", 15555):
+        async with serve(self._client_connected, "0.0.0.0", 15555):
             while self._isRunning:
 
                 while self._responses.qsize() > 0:

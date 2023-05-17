@@ -69,6 +69,13 @@ class CarlaEnvironment:
             loc.y - left * math.cos(math.radians(rot.yaw)) + forward * math.sin(math.radians(rot.yaw)),
             loc.z + upward)
 
+    @staticmethod
+    def relocate_spectator(spectator: carla.Actor,
+                           ego_car_snapshot: carla.ActorSnapshot) -> None:
+        spectator_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot)
+        transform = carla.Transform(spectator_location, ego_car_snapshot.get_transform().rotation)
+        spectator.set_transform(transform)
+
     def load_world(self,
                    town_id: Optional[str]) -> carla.World:
         world = self.client.get_world()
@@ -118,13 +125,3 @@ class CarlaEnvironment:
                 if other_car:
                     vehicle_factory.configure_traffic_vehicle(other_car)
                     print(f'CEV: spawned {other_car.type_id} [#{len(vehicles)}]')
-            
-    def relocate_spectator(self,
-                           spectator: carla.Actor,
-                           ego_car_snapshot: carla.ActorSnapshot) -> None:
-        spectator_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot)
-        
-        transform = carla.Transform(spectator_location, ego_car_snapshot.get_transform().rotation)
-        spectator.set_transform(transform)
-
-    
