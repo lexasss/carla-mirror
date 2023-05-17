@@ -19,7 +19,6 @@ class CarlaSyncMode(object):
         with CarlaSyncMode(world, sensors) as sync_mode:
             while True:
                 data = sync_mode.tick(timeout=1.0)
-
     '''
     def __init__(self,
                  world: carla.World,

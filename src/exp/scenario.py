@@ -8,7 +8,7 @@ from queue import SimpleQueue
 from src.user_action import Action, ActionType, DriverTask, CarSpawningLocation
 
 from src.exp.task_screen import TaskScreenRequests, TaskScreenRequest, TaskScreen
-from src.exp.logging import Logger
+from src.exp.logging import EventLogger
 from src.exp.delayed_task import DelayedTask
 from src.exp.mirror_status import MirrorStatus, NetCmd
 
@@ -44,7 +44,7 @@ class Scenario:
 
         self._delayed_tasks: List[DelayedTask] = list()
 
-        self._logger = Logger('scenario')
+        self._logger = EventLogger('scenario')
         
         self._task_distances: List[float] = []
         self._task_distance_index = -1

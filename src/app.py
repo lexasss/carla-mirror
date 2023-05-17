@@ -30,7 +30,7 @@ from src.mirror.top_view import TopViewMirror
 from src.mirror.fullscreen import FullscreenMirror
 from src.mirror.base import Mirror
 
-from src.exp.logging import Logger
+from src.exp.logging import EventLogger
 from src.exp.scenario import Scenario
 from src.exp.scenario_env import ScenarioEnvironment
 
@@ -42,7 +42,7 @@ class App:
     def __init__(self):
         self._spawned_actors: List[carla.Actor] = []
         
-        self._logger = Logger('app')
+        self._logger = EventLogger('app')
         
         CarlaEnvironment.set_driver_offset(VehicleFactory.EGO_CAR_TYPE)
         SideMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
@@ -231,10 +231,15 @@ class App:
                                scenario: Scenario,
                                runner: Runner,
                                ego_car_snapshot: carla.ActorSnapshot) -> None:
-        scenario.search_target_distance = runner.get_distance_to_search_target(ego_car_snapshot)
-        vehicle, distance = runner.get_nearest_vehicle_behind(ego_car_snapshot)
+        if runner.search_target is None:
+            scenario.search_target_distance = 0
+        else:
+            scenario.search_target_distance = runner.controller.get_distance_to(ego_car_snapshot, runner.search_target)
+        
+        monitor = runner.monitor
+        vehicle, distance = monitor.get_nearest_vehicle_behind(ego_car_snapshot)
         if vehicle:
-            lane = runner.get_lane(ego_car_snapshot, vehicle)
+            lane = monitor.get_lane(ego_car_snapshot, vehicle)
             if lane:
                 scenario.set_nearest_vehicle_behind(vehicle.type_id, distance, lane, runner.ego_car_speed)
         

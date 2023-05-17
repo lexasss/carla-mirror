@@ -172,7 +172,7 @@ class CarlaController:
         else:
             return None
     
-    # Environment
+    # Chnage the environment
     
     def toiggle_night(self):
         weather = self.world.get_weather()

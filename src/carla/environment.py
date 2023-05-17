@@ -126,3 +126,5 @@ class CarlaEnvironment:
         
         transform = carla.Transform(spectator_location, ego_car_snapshot.get_transform().rotation)
         spectator.set_transform(transform)
+
+    
