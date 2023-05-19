@@ -2,11 +2,11 @@
 
 ## Requires
 
-Python 3.7
+Python 3.7.9
 
 ## Setup
 
-CARLA PythonAPI is expected to be in `../carla/dist` relative to this project
+The project mus tbe located inside CARLA's PythonAPI folder, so that `PythonAPI/carla/dist` exists nearby
 
 ### Configuring Pylance (`Python > Analysis`)
 
@@ -21,6 +21,8 @@ It is expected that
 - [glslViewer](https://github.com/patriciogonzalezvivo/glslViewer) to inspect the shader (run `glslViewer ./shaders/zoom_x.frag "path/to/some/image.png"`)
 - [glslang@12.1](https://github.com/KhronosGroup/glslang) for GLSL Linter extension to be set in `Validator Path` in its settings (clone this repo)
 
-### PIP virtual environment
+### Virtual environment and installing dependencies
 
-Activate the virtual environment by launching `run_env.bat` from the VS Code terminal
+After cloning the project, run the following scripts form the VS Code terminal
+ - `env.bat` to create the virtual environment,
+ - `install.bat` to install dependencies

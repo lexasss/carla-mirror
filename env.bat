@@ -1,7 +1,8 @@
 @echo off
 
 if not exist .venv/ (
-    rem python -m venv .\.venv
+    echo Please wait . . .
+    python -m venv .\.venv
     echo.
     echo Please run `install.bet`
 )
