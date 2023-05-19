@@ -1,7 +1,12 @@
-Package           Version
------------------ -------
-packaging         23.0
-pip               23.1.2
-setuptools        47.1.0
-typed-ast         1.5.4
-typing_extensions 4.5.0
+event-bus==1.0.2
+glcontext==2.3.7
+importlib-metadata==6.6.0
+jsonpickle==3.0.1
+moderngl==5.8.2
+numpy==1.21.6
+pygame==2.4.0
+pywin32==306
+pywin32-stubs==1.0.7
+typing_extensions==4.5.0
+websockets==11.0.3
+zipp==3.15.0
