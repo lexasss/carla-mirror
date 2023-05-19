@@ -3,14 +3,20 @@ import glob
 import sys
 
 from contextlib import contextmanager
-from typing import Generator
+from typing import Generator, Optional
 
 PACKAGE_EXT = 'egg'
 
-def add_carla_path(path: str = '../carla/dist') -> None:
+def add_carla_path(path: Optional[str] = None) -> None:
     if path in sys.path:
         return
 
+    if path is None:
+        p = os.environ["VIRTUAL_ENV"].split('\\')
+        i = p.index("PythonAPI") + 1
+        p = p[:i]
+        path = "/".join(p) + "/carla/dist"
+            
     bin_version = 'win-amd64' if os.name == 'nt' else 'linux-x86_64'
     matched_carla_api = glob.glob(f'{path}/carla-*{sys.version_info.major}.{sys.version_info.minor}-{bin_version}.{PACKAGE_EXT}')
     #matched_carla_api = glob.glob(f'{path}/carla-*-cp{sys.version_info.major}{sys.version_info.minor}-{bin_version}.whl')

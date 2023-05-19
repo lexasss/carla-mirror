@@ -4,12 +4,17 @@ from io import TextIOWrapper
 from typing import Optional, Any
 from datetime import datetime
 
+LOG_FOLDER = "logs"
+
 class LogFile:
     def __init__(self) -> None:
         self.name: str
         self.file: TextIOWrapper
         
         self._count = 0
+        
+        if not os.path.exists(LOG_FOLDER):
+            os.makedirs(LOG_FOLDER)
         
     def create(self, prefix: Optional[str] = None, suffix: Optional[str] = None) -> bool:
         if self._count == 0:
@@ -20,7 +25,7 @@ class LogFile:
                 name = f'{suffix}_{name}'
             
             self.name = name    
-            self.file = open(f'logs/{name}.txt', 'w')
+            self.file = open(f'{LOG_FOLDER}/{name}.txt', 'w')
             
         self._count += 1
         
