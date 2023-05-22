@@ -14,6 +14,7 @@ class FullscreenMirror(Mirror):
         'vehicle.toyota.prius': Offset(0.7, 0.9, 1.1),
         'vehicle.audi.tt': Offset(0.4, 0.8, 1.1),
         'vehicle.mercedes.coupe_2020': Offset(0.55, 0.8, 1.1),
+        'vehicle.dreyevr.egovehicle': Offset(0.7, 0.9, 1.1),
     }
     
     CAMERA_YAW = 18

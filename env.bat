@@ -4,7 +4,7 @@ if not exist .venv/ (
     echo Please wait . . .
     python -m venv .\.venv
     echo.
-    echo Please run `install.bet`
+    echo Please run `install.bat`
 )
 
-.\.venv\Scripts\activate
+start "CARLA scripting" .\.venv\Scripts\activate

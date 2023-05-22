@@ -12,6 +12,7 @@ class WideviewMirror(Mirror):
         'vehicle.toyota.prius': 1.5,
         'vehicle.audi.tt': 1.5,
         'vehicle.mercedes.coupe_2020': 1.5,
+        'vehicle.dreyevr.egovehicle': 1.8,
     }
 
     CAMERA_PITCH = -6       # slightly downward

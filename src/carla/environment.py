@@ -17,6 +17,7 @@ class CarlaEnvironment:
         'vehicle.toyota.prius': Offset(0.15, 0.34, 1.20),
         'vehicle.audi.tt': Offset(-0.05, 0.38, 1.20),
         'vehicle.mercedes.coupe_2020': Offset(0.10, 0.36, 1.15),
+        'vehicle.dreyevr.egovehicle': Offset(0.10, 0.32, 1.28),
     }
     
     # relative to the vehicle's center

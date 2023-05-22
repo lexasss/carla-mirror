@@ -59,7 +59,7 @@ class App:
         
         try:
             environment = CarlaEnvironment(client, settings)
-            world = environment.load_world(settings.town)
+            world = environment.load_world(settings.map)
 
         except:
             print(f'APP: CARLA is not running')
@@ -74,13 +74,14 @@ class App:
 
             mirror = self._create_mirror(settings, world, ego_car)
 
-            if is_ego_car_created:
+            if is_ego_car_created or settings.is_primary_mirror:
                 mirror_name = str(settings.side).split('.')[1].lower()
                 self._logger.log('mirror', mirror_name)
                 car_name = '_'.join(ego_car.type_id.split('.')[1:])
                 self._logger.log('car', car_name)
                 
-                self._spawned_actors.append(ego_car)
+                if is_ego_car_created:
+                    self._spawned_actors.append(ego_car)
                 
                 runner = Runner(environment, vehicle_factory, ego_car, mirror)
 
