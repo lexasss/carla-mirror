@@ -1,4 +1,4 @@
-from src.utils import add_carla_path, suppress_stdout
+from src.carla.utils import add_carla_path
 add_carla_path()
 
 from typing import Optional, List, cast
@@ -7,6 +7,8 @@ try:
     import carla
 except ImportError:
     raise RuntimeError('cannot import CARLA')
+
+from src.utils import suppress_stdout
 
 try:
     with suppress_stdout():
@@ -58,7 +60,7 @@ class App:
         client.set_timeout(5.0)
         
         try:
-            environment = CarlaEnvironment(client, settings)
+            environment = CarlaEnvironment(client)
             world = environment.load_world(settings.map)
 
         except:

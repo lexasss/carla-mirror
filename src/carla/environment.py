@@ -5,7 +5,7 @@ import carla
 from typing import Callable, Optional
 
 from src.carla.vehicle_factory import VehicleFactory
-from src.settings import Settings
+
 from src.offset import Offset
 
 
@@ -23,10 +23,8 @@ class CarlaEnvironment:
     driver_offset = Offset()     # relative to the vehicle's center, set via set_driver_offset
     
     def __init__(self,
-                 client: carla.Client,
-                 settings: Settings) -> None:
+                 client: carla.Client) -> None:
         self.client = client
-        self.settings = settings
 
     @staticmethod
     def set_driver_offset(vehicle_type: str):
@@ -80,7 +78,7 @@ class CarlaEnvironment:
                    town_id: Optional[str]) -> carla.World:
         world = self.client.get_world()
         if town_id:
-            desired_map_name = f'/Game/Carla/Maps/Town{town_id}'
+            desired_map_name = f'Carla/Maps/Town{town_id}'
             map_name = world.get_map().name
             if map_name != desired_map_name and map_name != (desired_map_name + '_Opt'):
                 available_maps = self.client.get_available_maps()

@@ -1,5 +1,6 @@
 import argparse
 
+from typing import Optional
 from enum import Enum
 
 class Side(Enum):
@@ -16,7 +17,7 @@ class Settings:
         
         self.size = [int(x) for x in args.res.split('x')]
         self.fov: int = args.fov
-        self.map: str = args.map
+        self.map: Optional[str] = args.map
         self.host: str = args.host
         self.pitch = int(args.pitch) if args.pitch != '' else None
         self.distort: bool = args.distort == True
