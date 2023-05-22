@@ -3,11 +3,12 @@ import argparse
 from enum import Enum
 
 class Side(Enum):
-    LEFT = 'left'
-    RIGHT = 'right'
-    WIDEVIEW = 'wideview'
-    TOPVIEW = 'topview' 
-    FULLSCREEN = 'fullscreen'
+    LEFT = 'left'           # left with mirror frame
+    RIGHT = 'right'         # right with mirror frame
+    WIDEVIEW = 'wideview'   # central stack with mirror frame
+    RLEFT = 'rleft'         # rectangular left
+    RRIGHT = 'rright'       # rectangular right
+    TOPVIEW = 'topview'     # view from the top (not a mirror)
 
 class Settings:
     def __init__(self) -> None:

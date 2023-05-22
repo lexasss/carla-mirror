@@ -27,7 +27,7 @@ from src.carla.vehicle_factory import VehicleFactory
 from src.mirror.side import SideMirror
 from src.mirror.wideview import WideviewMirror
 from src.mirror.top_view import TopViewMirror
-from src.mirror.fullscreen import FullscreenMirror
+from src.mirror.rectangular import RectanularMirror
 from src.mirror.base import Mirror
 
 from src.exp.logging import EventLogger
@@ -44,7 +44,7 @@ class App:
         
         CarlaEnvironment.set_driver_offset(VehicleFactory.EGO_CAR_TYPE)
         SideMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
-        FullscreenMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
+        RectanularMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
         WideviewMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
         
     def run(self):
@@ -198,10 +198,13 @@ class App:
             return WideviewMirror(settings, world, ego_car)
         elif settings.side == Side.TOPVIEW:
             return TopViewMirror(settings, world, ego_car)
-        elif settings.side == Side.FULLSCREEN:
-            return FullscreenMirror(settings, world, ego_car)
-        else:
+        elif settings.side == Side.RLEFT or settings.side == Side.RRIGHT:
+            return RectanularMirror(settings, world, ego_car)
+        elif settings.side == Side.LEFT or settings.side == Side.RIGHT:
             return SideMirror(settings, world, ego_car)
+        else:
+            print(f'Unknown mirror type: "{settings.side}"')
+            raise IndexError
 
     def _handle_action(self,
                        action: Optional[Action],
