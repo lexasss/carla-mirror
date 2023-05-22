@@ -15,10 +15,10 @@ class WideviewMirror(Mirror):
         'vehicle.dreyevr.egovehicle': 1.8,
     }
 
-    CAMERA_PITCH = -6       # slightly downward
-    CAMERA_X = 0.5
+    CAMERA_PITCH_K = -20        # value of fov per one degree downward: for example, if fov=120 and CAMERA_PITCH_K=-20, then the camera pitch is 120/-20 = -6
+    CAMERA_X = 0.5              # camera sidewise offset
     
-    camera_z = 1.8
+    camera_z = 1.8      # one of value from CAMERAS_Z, set via set_camera_offset
     
     def __init__(self,
                  settings: Settings,
@@ -34,16 +34,12 @@ class WideviewMirror(Mirror):
         
         self._display = self._make_display((self.width, self.height))
 
-        pitch = settings.pitch if settings.pitch is not None else WideviewMirror.CAMERA_PITCH
+        pitch = settings.pitch if settings.pitch is not None else settings.fov / WideviewMirror.CAMERA_PITCH_K
         transform = carla.Transform(
             carla.Location(x = WideviewMirror.CAMERA_X, z = WideviewMirror.camera_z),
             carla.Rotation(pitch = pitch, yaw = 180)
         )
         self.camera = self._make_camera(self.width, self.height, settings.fov, transform, vehicle) if vehicle is not None else None
-                                        # lens_y_size = '0.8',
-                                        # lens_kcube = '1000.0',
-                                        # lens_k = '1000.5',
-                                        # blur_amount = '0.0'
 
     @staticmethod
     def set_camera_offset(vehicle_type: str):
