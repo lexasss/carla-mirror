@@ -17,11 +17,10 @@ class CarlaEnvironment:
         'vehicle.toyota.prius': Offset(0.15, 0.34, 1.20),
         'vehicle.audi.tt': Offset(-0.05, 0.38, 1.20),
         'vehicle.mercedes.coupe_2020': Offset(0.10, 0.36, 1.15),
-        'vehicle.dreyevr.egovehicle': Offset(0.10, 0.32, 1.28),
+        'vehicle.dreyevr.egovehicle': Offset(0.38, 0.32, 1.25),
     }
     
-    # relative to the vehicle's center
-    driver_offset = Offset(0.32, 0.10, 1.28)     # aside (left is positive), forward, up
+    driver_offset = Offset()     # relative to the vehicle's center, set via set_driver_offset
     
     def __init__(self,
                  client: carla.Client,

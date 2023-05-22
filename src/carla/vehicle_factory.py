@@ -74,8 +74,9 @@ class VehicleFactory:
             vehicles_bps = self.world.get_blueprint_library().filter('vehicle.*')
             vehicles_bps = [
                 bp for bp in vehicles_bps if 
-                    int(bp.get_attribute('number_of_wheels')) == 4
-                    and bp.id in PASSENGE_CARS
+                    bp.id in PASSENGE_CARS
+                    and bp.has_attribute('number_of_wheels')
+                    and int(bp.get_attribute('number_of_wheels')) == 4
             ]
             vehicle_bp = random.choice(vehicles_bps)
             
