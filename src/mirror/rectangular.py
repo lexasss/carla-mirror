@@ -27,7 +27,11 @@ class RectanularMirror(Mirror):
                  vehicle: Optional[carla.Vehicle] = None) -> None:
 
         screen_size = pygame.display.get_desktop_sizes()[0]
-        super().__init__(settings.size or [screen_size[0], screen_size[1]], 'fullscreen', None, world) 
+        super().__init__([screen_size[0], screen_size[1]],
+                         size = settings.size,
+                         side = settings.side.value,
+                         mask_name = None,
+                         world = world) 
 
         self._display = self._make_display((self.width, self.height))
 

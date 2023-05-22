@@ -7,4 +7,9 @@ if not exist .venv/ (
     echo Please run `install.bat`
 )
 
-start "CARLA scripting" .\.venv\Scripts\activate
+if "%TERM_PROGRAM%" neq "" (
+    rem We do not need a separate window when running from the VS Code environment
+    .\.venv\Scripts\activate
+) else (
+    start "CARLA script" .\.venv\Scripts\activate
+)

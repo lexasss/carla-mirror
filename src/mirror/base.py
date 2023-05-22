@@ -21,15 +21,14 @@ class Mirror:
     BLANK_COLOR = (255, 255, 255)
 
     def __init__(self,
-                 size: List[int],
+                 default_size: List[int],
+                 size: Optional[List[int]],
                  side: str,
                  mask_name: Optional[str] = None,
                  world: Optional[carla.World] = None,
                  shader: Optional[str] = None,
                  is_camera: bool = False) -> None:
         self.world = world
-        self.width = size[0]
-        self.height = size[1]
         
         self.enabled = True
         self.brightness = 1.0
@@ -37,6 +36,15 @@ class Mirror:
         self.is_camera = is_camera
         
         # Internal
+
+        self._settings = MirrorSettings.create(side)
+        
+        if size:
+            self.width = size[0]
+            self.height = size[1]
+        else:
+            self.width = self._settings.width if self._settings.width else default_size[0]
+            self.height = self._settings.height if self._settings.height else default_size[1]
         
         # to be set in the descendants
         self.camera: Optional[carla.Sensor]
@@ -44,6 +52,7 @@ class Mirror:
         self._wnd: Window
         
         # continue initializing
+   
         self._display_gl: Optional[OpenGLRenderer] = None
 
         self._mask: Optional[pygame.surface.Surface] = None
@@ -52,14 +61,16 @@ class Mirror:
             mask = pygame.image.load(f'images/{mask_name}.png')
             self._mask = pygame.transform.scale(mask, (self.width + 1, self.height + 1))  # black lines may be visible at the edges if we do not expand the image by 1 pixels in each dimension
 
-        self._settings = MirrorSettings.create(side)
-    
         self._is_mouse_down: bool = False
         self._mouse_pos: Tuple[int, int] = (0, 0)
         self._window_pos: Tuple[int, int] = (self._settings.x, self._settings.y)
         
         self._brightness = self.brightness
         self._must_scale = False
+        
+        self._settings.width = self.width
+        self._settings.height = self.height
+        MirrorSettings.save(self._settings)
         
     def draw_image(self, image: Optional[carla.Image]) -> None:
         self._update_dimming()

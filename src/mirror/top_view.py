@@ -22,11 +22,12 @@ class TopViewMirror(Mirror):
                  world: Optional[carla.World] = None,
                  vehicle: Optional[carla.Vehicle] = None) -> None:
 
-        super().__init__(size = settings.size or [480, 320], \
-            side= settings.side.value, \
-            mask_name = None, \
-            world = world, \
-            is_camera = True) 
+        super().__init__([480, 320],
+                         size = settings.size,
+                         side = settings.side.value,
+                         mask_name = None,
+                         world = world,
+                         is_camera = True) 
                 
         if not self._settings.is_initialized():
             self._window_pos = (0, 0)

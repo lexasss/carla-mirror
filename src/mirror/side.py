@@ -32,7 +32,11 @@ class SideMirror(Mirror):
                  world: Optional[carla.World] = None,
                  vehicle: Optional[carla.Vehicle] = None) -> None:
 
-        super().__init__(settings.size or [480, 320], settings.side.value, f'{settings.side.value}_mirror', world) 
+        super().__init__([480, 320],
+                         size = settings.size,
+                         side = settings.side.value,
+                         mask_name = f'{settings.side.value}_mirror',
+                         world = world) 
                 
         if not self._settings.is_initialized():
             screen_size = pygame.display.get_desktop_sizes()[0]

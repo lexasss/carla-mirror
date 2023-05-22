@@ -3,6 +3,7 @@
 ## Requires
 
 Python 3.7.9
+[VC++ 2019 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
 ## Setup
 

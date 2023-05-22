@@ -3,7 +3,7 @@ import copy
 import jsonpickle
 import json
 
-from typing import Any, List
+from typing import Optional, List, Any
 
 FILENAME = 'mirror_settings.json'
 
@@ -11,6 +11,8 @@ class MirrorSettings:
     def __init__(self, section: str, **settings: Any) -> None:
         self.x = 0
         self.y = 0
+        self.width: Optional[int] = None
+        self.height: Optional[int] = None
         
         self._section = section
         self._is_initialized = False
