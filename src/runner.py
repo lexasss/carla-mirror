@@ -155,9 +155,11 @@ class Runner:
             self.controller.display_info(ego_car_snapshot, 'OPENED')
 
         elif action.type == ActionType.LANE_LEFT:
-            self.vehicle_factory.traffic_manager.force_lane_change(self.ego_car, False)
+            if self.vehicle_factory.traffic_manager:
+                self.vehicle_factory.traffic_manager.force_lane_change(self.ego_car, False)
         elif action.type == ActionType.LANE_RIGHT:
-            self.vehicle_factory.traffic_manager.force_lane_change(self.ego_car, True)
+            if self.vehicle_factory.traffic_manager:
+                self.vehicle_factory.traffic_manager.force_lane_change(self.ego_car, True)
 
         elif action.type == ActionType.TOGGLE_SPECTATOR_AS_DRIVER:
             self._spectator_is_driver = not self._spectator_is_driver

@@ -45,7 +45,12 @@ class VehicleFactory:
     
     def __init__(self, client: carla.Client) -> None:
         self.world = client.get_world()
-        self.traffic_manager = client.get_trafficmanager()
+        
+        try:
+            self.traffic_manager = client.get_trafficmanager()
+        except:
+            self.traffic_manager = None
+            print(f'CVF: Traffic manager is not available')
         
     @staticmethod
     def set_driving_mode(is_manual_mode: bool):
@@ -65,8 +70,9 @@ class VehicleFactory:
             while vehicle is None:
                 vehicle = self.make_vehicle(True)
                 time.sleep(0.5)
-            self.traffic_manager.ignore_lights_percentage(vehicle, 100)
-            # self.traffic_manager.keep_right_rule_percentage(vehicle, 50)
+                
+            self.configure_ego_car(vehicle)
+            
             return (vehicle, True)
         else:
             print(f'CVF: Found a vehicle, attaching the mirror')
@@ -115,10 +121,16 @@ class VehicleFactory:
 
     def configure_traffic_vehicle(self,
                                   vehicle: carla.Vehicle) -> None:
-        self.traffic_manager.vehicle_percentage_speed_difference(vehicle, -20)
-        self.traffic_manager.ignore_lights_percentage(vehicle, 100)
-        self.traffic_manager.ignore_signs_percentage(vehicle, 100)
-        #self.traffic_manager.random_left_lanechange_percentage(vehicle, 20)
-        #self.traffic_manager.random_right_lanechange_percentage(vehicle, 20)
+        if self.traffic_manager:
+            self.traffic_manager.vehicle_percentage_speed_difference(vehicle, -20)
+            self.traffic_manager.ignore_lights_percentage(vehicle, 100)
+            self.traffic_manager.ignore_signs_percentage(vehicle, 100)
+            #self.traffic_manager.random_left_lanechange_percentage(vehicle, 20)
+            #self.traffic_manager.random_right_lanechange_percentage(vehicle, 20)
    
-    
+    def configure_ego_car(self,
+                   vehicle: carla.Vehicle) -> None:
+        if self.traffic_manager:
+            self.traffic_manager.ignore_lights_percentage(vehicle, 100)
+            # self.traffic_manager.keep_right_rule_percentage(vehicle, 50)
+        
