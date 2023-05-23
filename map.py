@@ -1,3 +1,8 @@
+# =============================================================================
+# This script is used to set up a map in advance,
+# so there would be no need to set if fro mthe main script
+# that could cause timeouts
+# =============================================================================
 import argparse
 
 from typing import Optional
@@ -48,11 +53,9 @@ if __name__ == '__main__':
     try:
         environment = CarlaEnvironment(client)
         world = environment.load_world(settings.map)
-
     except KeyboardInterrupt:
         print('Cancelled by user')
     except:
-        print(f'CARLA is not running')
-    
+        print('CARLA is not running')
     else:    
         print('Done')
