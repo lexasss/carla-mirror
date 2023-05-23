@@ -33,21 +33,31 @@ PASSENGE_CARS = [
     'vehicle.tesla.cybertruck',
 ]
 
+MANUAL_EGO_CAR_TYPE = 'vehicle.dreyevr.egovehicle'
+AUTO_EGO_CAR_TYPE = 'vehicle.lincoln.mkz_2017'
+# EGO_CAR_TYPE = 'vehicle.toyota.prius'
+# EGO_CAR_TYPE = 'vehicle.audi.tt'
+# EGO_CAR_TYPE = 'vehicle.mercedes.coupe_2020'
+
 class VehicleFactory:
-    # EGO_CAR_TYPE = 'vehicle.lincoln.mkz_2017'
-    # EGO_CAR_TYPE = 'vehicle.toyota.prius'
-    # EGO_CAR_TYPE = 'vehicle.audi.tt'
-    # EGO_CAR_TYPE = 'vehicle.mercedes.coupe_2020'
-    EGO_CAR_TYPE = 'vehicle.dreyevr.egovehicle'
+    
+    ego_car_type: str
     
     def __init__(self, client: carla.Client) -> None:
         self.world = client.get_world()
         self.traffic_manager = client.get_trafficmanager()
         
+    @staticmethod
+    def set_driving_mode(is_manual_mode: bool):
+        if is_manual_mode:
+            VehicleFactory.ego_car_type = MANUAL_EGO_CAR_TYPE
+        else:
+            VehicleFactory.ego_car_type = AUTO_EGO_CAR_TYPE
+            
     def get_ego_car(self) -> Tuple[carla.Vehicle, bool]:
         time.sleep(1)   # small pause, othewise the world.get_actors() list is empty
         
-        vehicles = self.world.get_actors().filter(VehicleFactory.EGO_CAR_TYPE)
+        vehicles = self.world.get_actors().filter(VehicleFactory.ego_car_type)
         
         if (len(vehicles) == 0):
             print(f'CVF: No vehicles found, spawining a new one')
@@ -68,7 +78,7 @@ class VehicleFactory:
                      transform: Optional[carla.Transform] = None) -> Optional[carla.Vehicle]:
         vehicle_bp: Optional[carla.ActorBlueprint] = None
         if is_ego_car:
-            vehicle_bp = self.world.get_blueprint_library().filter(VehicleFactory.EGO_CAR_TYPE)[0]
+            vehicle_bp = self.world.get_blueprint_library().filter(VehicleFactory.ego_car_type)[0]
             vehicle_bp.set_attribute('role_name', 'ego')
         else:
             vehicles_bps = self.world.get_blueprint_library().filter('vehicle.*')
@@ -80,7 +90,7 @@ class VehicleFactory:
             ]
             vehicle_bp = random.choice(vehicles_bps)
             
-            while vehicle_bp.id == VehicleFactory.EGO_CAR_TYPE:
+            while vehicle_bp.id == VehicleFactory.ego_car_type:
                 vehicle_bp = random.choice(vehicles_bps)
         
         if transform is None:

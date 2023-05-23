@@ -17,16 +17,18 @@ class Settings:
         
         self.size = [int(x) for x in args.res.split('x')]
         self.fov: int = args.fov
-        self.map: Optional[str] = args.map
+        self.town: Optional[str] = args.town
         self.host: str = args.host
         self.pitch = int(args.pitch) if args.pitch != '' else None
         self.distort: bool = args.distort == True
         self.is_primary_mirror = args.adopt_egocar == True
+        self.is_manual_mode = args.manual == True
         
         self.server_host: str = args.srvhost
 
         if self.size[0] == 0 or self.size[1] == 0:
             self.size = None
+            
         for side in list(Side):
             if args.side == side.value:
                 self.side = side
@@ -54,7 +56,7 @@ def make_args():
         '--pitch',
         default='',
         type=str,
-        help='Camera pitch')
+        help='Camera pitch (default: dependant on FOV)')
     argparser.add_argument(
         '-d',
         '--distort',
@@ -65,24 +67,29 @@ def make_args():
         '--res',
         metavar='WIDTHxHEIGHT',
         default='0x0',
-        help='window resolution')
+        help='window resolution (default: defined for each mirror separately)')
     argparser.add_argument(
-        '-m',
-        '--map',
+        '-t',
+        '--town',
         default=None,
-        help='Carla map ID')
+        help='Carla town ID')
     argparser.add_argument(
         '--host',
         default='localhost',
-        help='Carla IP, or "localhost"')
+        help='Carla IP (default: localhost)')
     argparser.add_argument(
         '--srvhost',
         default='localhost',
-        help='IP of the PC running the primary mirror, or localhost')
+        help='IP of the PC running the primary mirror (default: localhost)')
     argparser.add_argument(
         '-a',
         '--adopt-egocar',
         action='store_true',
         help='A flag to indicate that this is the primary mirror, even though the driving car exists already')
+    argparser.add_argument(
+        '-m',
+        '--manual',
+        action='store_true',
+        help='The flag to set the manual driving mode')
     
     return argparser.parse_args()

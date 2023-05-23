@@ -44,14 +44,16 @@ class App:
     def __init__(self):
         self._spawned_actors: List[carla.Actor] = []
         
-        CarlaEnvironment.set_driver_offset(VehicleFactory.EGO_CAR_TYPE)
-        SideMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
-        RectanularMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
-        WideviewMirror.set_camera_offset(VehicleFactory.EGO_CAR_TYPE)
-        
     def run(self):
         settings = Settings()
 
+        VehicleFactory.set_driving_mode(settings.is_manual_mode)
+        
+        CarlaEnvironment.set_driver_offset(VehicleFactory.ego_car_type)
+        SideMirror.set_camera_offset(VehicleFactory.ego_car_type)
+        RectanularMirror.set_camera_offset(VehicleFactory.ego_car_type)
+        WideviewMirror.set_camera_offset(VehicleFactory.ego_car_type)
+        
         pygame.init()
 
         self._logger = EventLogger('app')
@@ -61,7 +63,7 @@ class App:
         
         try:
             environment = CarlaEnvironment(client)
-            world = environment.load_world(settings.map)
+            world = environment.load_world(settings.town)
 
         except:
             print(f'APP: CARLA is not running')

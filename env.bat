@@ -8,8 +8,11 @@ if not exist .venv/ (
 )
 
 if "%TERM_PROGRAM%" neq "" (
-    rem We do not need a separate window when running from the VS Code environment
+    rem This script is running from VS Code environment,
+    rem therefore we do not need a separate window
     .\.venv\Scripts\activate
 ) else (
+    rem Otherwise there is no way (OR IS IT?) to force venv affecting the environment the script was launched from,
+    rem therefore we need a separate cmd-line window
     start "CARLA script" .\.venv\Scripts\activate
 )
