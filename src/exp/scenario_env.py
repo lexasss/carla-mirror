@@ -36,7 +36,7 @@ class ScenarioEnvironment(object):
                 
         if not self._is_primary_mirror:
             settings = Settings()
-            server_host = settings.server_host
+            server_host = settings.primary_mirror_host
             self._tcp_client = TcpClient(server_host)
             self._tcp_client.connect(self.mirror_status.handle_net_request)
             

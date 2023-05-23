@@ -21,10 +21,9 @@ class Settings:
         self.host: str = args.host
         self.pitch = int(args.pitch) if args.pitch != '' else None
         self.distort: bool = args.distort == True
+        self.primary_mirror_host: str = args.primary_mirror_host
         self.is_primary_mirror = args.adopt_egocar == True
         self.is_manual_mode = args.manual == True
-        
-        self.server_host: str = args.srvhost
 
         if self.size[0] == 0 or self.size[1] == 0:
             self.size = None
@@ -74,11 +73,13 @@ def make_args():
         default=None,
         help='Carla town ID')
     argparser.add_argument(
+        '-h',
         '--host',
         default='localhost',
         help='Carla IP (default: localhost)')
     argparser.add_argument(
-        '--srvhost',
+        '-y',
+        '--primary-mirror-host',
         default='localhost',
         help='IP of the PC running the primary mirror (default: localhost)')
     argparser.add_argument(
