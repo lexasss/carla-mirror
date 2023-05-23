@@ -73,7 +73,7 @@ def make_args():
         default=None,
         help='Carla town ID')
     argparser.add_argument(
-        '-h',
+        '-x',
         '--host',
         default='localhost',
         help='Carla IP (default: localhost)')
