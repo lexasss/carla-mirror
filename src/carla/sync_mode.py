@@ -34,11 +34,12 @@ class CarlaSyncMode(object):
         self._frame: int = 0
         
     def __enter__(self):
-        self._settings = self._world.get_settings()
-        self._frame = self._world.apply_settings(carla.WorldSettings(
-            no_rendering_mode = False,
-            synchronous_mode = True,
-            fixed_delta_seconds = self._delta_seconds))
+        if self._can_tick_world:
+            self._settings = self._world.get_settings()
+            self._frame = self._world.apply_settings(carla.WorldSettings(
+                no_rendering_mode = False,
+                synchronous_mode = True,
+                fixed_delta_seconds = self._delta_seconds))
 
         def make_queue(register_event: Callable[[Callable[[QueryResult], None]], Any]) -> None:
             q: Queue[QueryResult] = Queue()
@@ -52,7 +53,8 @@ class CarlaSyncMode(object):
         return self
     
     def __exit__(self, *sensors: Tuple[carla.Sensor]):
-        self._world.apply_settings(self._settings)
+        if self._can_tick_world:
+            self._world.apply_settings(self._settings)
 
     def tick(self, timeout: float) -> Optional[List[QueryResult]]:
         if self._can_tick_world:

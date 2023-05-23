@@ -15,4 +15,5 @@ if "%TERM_PROGRAM%" neq "" (
     rem Otherwise there is no way (OR IS IT?) to force venv affecting the environment the script was launched from,
     rem therefore we need a separate cmd-line window
     start "CARLA script" .\.venv\Scripts\activate
+    exit /b
 )
