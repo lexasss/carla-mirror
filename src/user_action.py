@@ -9,6 +9,7 @@ class ActionType(IntEnum):
 
     MOUSE = 4
     MOUSEMOVE = 5
+    OFFSET = 6
 
     SPAWN_TARGET = 8
     SPAWN_TARGET_NEARBY = 9
@@ -97,6 +98,15 @@ class UserAction:
         pygame.constants.K_BACKSLASH: Action(ActionType.TOGGLE_MIRROR_DIMMING),
         pygame.constants.K_LEFT: Action(ActionType.LANE_LEFT),
         pygame.constants.K_RIGHT: Action(ActionType.LANE_RIGHT),
+
+        pygame.constants.K_KP4: Action(ActionType.OFFSET, 'l'),
+        pygame.constants.K_KP6: Action(ActionType.OFFSET, 'r'),
+        pygame.constants.K_KP8: Action(ActionType.OFFSET, 'u'),
+        pygame.constants.K_KP2: Action(ActionType.OFFSET, 'd'),
+        pygame.constants.K_KP7: Action(ActionType.OFFSET, 'lu'),
+        pygame.constants.K_KP1: Action(ActionType.OFFSET, 'ld'),
+        pygame.constants.K_KP9: Action(ActionType.OFFSET, 'ru'),
+        pygame.constants.K_KP3: Action(ActionType.OFFSET, 'rd'),
 
         pygame.constants.K_F9: Action(ActionType.DEBUG_TCP),
         

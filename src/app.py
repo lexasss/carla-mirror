@@ -186,6 +186,8 @@ class App:
                             scenario.start()
                     elif action.type == ActionType.MOUSE:
                         mirror.on_mouse(cast(str, action.param))
+                    elif action.type == ActionType.OFFSET:
+                        mirror.on_offset(cast(str, action.param))
                     elif action.type == ActionType.DEBUG_TASK_SCREEN:
                         if scenario:
                             scenario.report_action_result(action, False)
@@ -202,7 +204,7 @@ class App:
             return WideviewMirror(settings, world, ego_car)
         elif settings.side == Side.TOPVIEW:
             return TopViewMirror(settings, world, ego_car)
-        elif settings.side == Side.RLEFT or settings.side == Side.RRIGHT:
+        elif settings.side == Side.RLEFT or settings.side == Side.RRIGHT or settings.side == Side.RREAR:
             return RectanularMirror(settings, world, ego_car)
         elif settings.side == Side.LEFT or settings.side == Side.RIGHT:
             return SideMirror(settings, world, ego_car)

@@ -67,6 +67,8 @@ class Mirror:
         
         self._brightness = self.brightness
         self._must_scale = False
+        self._offset = (self._settings.offset_x, self._settings.offset_y)
+        self._is_topmost = True
         
         self._settings.width = self.width
         self._settings.height = self.height
@@ -83,7 +85,7 @@ class Mirror:
             image_surface = pygame.surfarray.make_surface(normal_view)
             if self._must_scale:
                 image_surface = pygame.transform.scale(image_surface, (self.width, self.height))
-            self._display.blit(image_surface, (0, 0))
+            self._display.blit(image_surface, self._offset)
         else:
             self._display.fill(Mirror.MASK_TRANSPARENT_COLOR)
             
@@ -96,8 +98,8 @@ class Mirror:
             cell_height = self.height / row_count
             for i in range(col_count):
                 for j in range(row_count):
-                    x = (i + 0.5) * cell_width
-                    y = (j + 0.5) * cell_height            
+                    x = (i + 0.5) * cell_width + self._offset[0]
+                    y = (j + 0.5) * cell_height + self._offset[1]
                     pygame.draw.circle(self._display, (255,0,255), (x,y), 10)
 
         if self._mask:
@@ -109,6 +111,10 @@ class Mirror:
 
     def toggle_brightness(self):
         self.brightness = 1.0 + Mirror.MIN_BRIGHTNESS - self.brightness
+        
+    def on_offset(self, cmd: str) -> None:
+        # to be overriden
+        pass
 
     def on_mouse(self, cmd: str) -> None:
         if cmd == 'down' and not self._is_mouse_down:
@@ -123,7 +129,7 @@ class Mirror:
             mouse_x, mouse_y = win32gui.GetCursorPos()
             x = self._window_pos[0] + mouse_x - self._mouse_pos[0]
             y = self._window_pos[1] + mouse_y - self._mouse_pos[1]
-            self._wnd.set_location(x, y)
+            self._wnd.set_location(x, y, self._is_topmost)
         elif cmd.startswith('move'):
             if self._display_gl:
                 a = [float(x) for x in cmd[4:].split(',')]
@@ -148,12 +154,14 @@ class Mirror:
         icon = pygame.image.load('images/icon.png')
         pygame.display.set_icon(icon)
 
-        self._wnd = Window(pygame.display.get_wm_info()['window'])
-        self._wnd.set_location(self._window_pos[0], self._window_pos[1])
+        self._wnd = Window(size, pygame.display.get_wm_info()['window'])
+        self._wnd.set_location(self._window_pos[0], self._window_pos[1], self._is_topmost)
 
         if self._mask:
             self._wnd.set_transparent_color(Mirror.MASK_TRANSPARENT_COLOR)
             
+        display.fill(Mirror.MASK_TRANSPARENT_COLOR)
+        
         return display
     
     def _make_camera(self,

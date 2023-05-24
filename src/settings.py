@@ -9,6 +9,7 @@ class Side(Enum):
     WIDEVIEW = 'wideview'   # central stack with mirror frame
     RLEFT = 'rleft'         # rectangular left
     RRIGHT = 'rright'       # rectangular right
+    RREAR = 'rrear'         # rectangular rearview
     TOPVIEW = 'topview'     # view from the top (not a mirror)
 
 class Settings:

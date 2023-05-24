@@ -29,11 +29,6 @@ class Settings:
         argparser = argparse.ArgumentParser(
             description='CARLA map')
         argparser.add_argument(
-            '-n',
-            '--name',
-            default=None,
-            help='Vehicle`s name without "vehicle." prefix')
-        argparser.add_argument(
             '-m',
             '--manual',
             action='store_true',
@@ -44,11 +39,6 @@ class Settings:
 if __name__ == '__main__':
     settings = Settings()
     
-    if settings.name is None:
-        print('Usage: python .\\map.py -n=COMPANY.MODEL')
-        print('(type --help to see all options)')
-        exit()
-
     client = carla.Client('localhost', 2000)
     client.set_timeout(5.0)
 

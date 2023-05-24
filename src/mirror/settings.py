@@ -13,6 +13,8 @@ class MirrorSettings:
         self.y = 0
         self.width: Optional[int] = None
         self.height: Optional[int] = None
+        self.offset_x = 0
+        self.offset_y = 0
         
         self._section = section
         self._is_initialized = False

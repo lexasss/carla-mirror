@@ -8,14 +8,15 @@ except ImportError:
     raise RuntimeError('pywin32 is not installed')
 
 class Window:
-    def __init__(self, hwnd: Optional[int] = None):
-        self.hwnd: int = win32gui.CreateWindowEx(0, '#32769', '', win32con.WS_MAXIMIZE | win32con.WS_VISIBLE, 0, 0, 1920, 1024, 0, 0, 0, None) if hwnd is None else hwnd
+    def __init__(self, size: Tuple[int, int], hwnd: Optional[int] = None):
+        self.hwnd: int = win32gui.CreateWindowEx(0, '#32769', '', win32con.WS_MAXIMIZE | win32con.WS_VISIBLE, 0, 0, size[0], size[1], 0, 0, 0, None) if hwnd is None else hwnd
     
     def close(self):
         win32gui.DestroyWindow(self.hwnd)
 
-    def set_location(self, x: int, y: int):
-        win32gui.SetWindowPos(self.hwnd, -1, x, y, 0, 0, 0x0001)
+    def set_location(self, x: int, y: int, is_topmost: bool):
+        zorder = win32con.HWND_TOPMOST if is_topmost else win32con.HWND_TOP
+        win32gui.SetWindowPos(self.hwnd, zorder, x, y, 0, 0, win32con.SWP_NOSIZE)
 
     def set_transparent_color(self, color: Tuple[int, int, int]) -> None:
         exstyle: int = win32gui.GetWindowLong(self.hwnd, win32con.GWL_EXSTYLE)

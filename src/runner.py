@@ -145,6 +145,9 @@ class Runner:
         elif action.type == ActionType.TOGGLE_MIRROR_DIMMING:
             self.mirror.toggle_brightness()
 
+        elif action.type == ActionType.OFFSET:
+            self.mirror.on_offset(cast(str, action.param))
+
         elif action.type == ActionType.START_SCENARIO:
             self.controller.display_info(ego_car_snapshot, 'OPENED')
         elif action.type == ActionType.STOP_SCENARIO:
