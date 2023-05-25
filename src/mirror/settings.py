@@ -3,7 +3,7 @@ import copy
 import jsonpickle
 import json
 
-from typing import Optional, List, Any
+from typing import Optional, Tuple, List, Any
 
 FILENAME = 'mirror_settings.json'
 
@@ -27,16 +27,16 @@ class MirrorSettings:
         return self._is_initialized
     
     @staticmethod
-    def create(section: str) -> 'MirrorSettings':
+    def create(section: str) -> Tuple['MirrorSettings', bool]:
         filename = os.path.join(FILENAME)
         try:
             with open(filename, mode='r') as f:
                 json_data: Any = jsonpickle.decode(f.read())
                 section_data = json_data[section]
-                return MirrorSettings(section, **section_data)
+                return MirrorSettings(section, **section_data), True
                 
         except:
-            return MirrorSettings(section)
+            return MirrorSettings(section), False
 
     @staticmethod
     def save(settings: 'MirrorSettings'):

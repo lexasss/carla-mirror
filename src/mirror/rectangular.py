@@ -29,12 +29,14 @@ class RectanularMirror(Mirror):
                  world: Optional[carla.World] = None,
                  vehicle: Optional[carla.Vehicle] = None) -> None:
 
-        screen_size = pygame.display.get_desktop_sizes()[0]
+        desktops = pygame.display.get_desktop_sizes()
+        screen_size = desktops[settings.screen] if settings.screen < len(desktops) else desktops[0]
         super().__init__([screen_size[0], screen_size[1]],
                          size = settings.size,
                          side = settings.side.value,
                          mask_name = None,
-                         world = world) 
+                         world = world,
+                         screen = settings.screen) 
 
         self._is_topmost = False
 

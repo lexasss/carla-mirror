@@ -17,6 +17,7 @@ class Settings:
         args = make_args()
         
         self.size = [int(x) for x in args.res.split('x')]
+        self.screen: int = int(args.screen)
         self.fov: int = args.fov
         self.town: Optional[str] = args.town
         self.host: str = args.host
@@ -45,6 +46,11 @@ def make_args():
         default=Side.LEFT.value,
         choices=[side.value for side in list(Side)],
         help='location of the mirror (default: left)')
+    argparser.add_argument(
+        '-c',
+        '--screen',
+        default=0,
+        help='Screen to use (default: 0)')
     argparser.add_argument(
         '-f',
         '--fov',

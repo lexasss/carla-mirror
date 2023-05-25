@@ -8,6 +8,7 @@ from typing import Optional, Tuple, List, cast
 import pygame
 import carla
 import win32gui
+import win32api
 
 try:
     import numpy as np
@@ -27,7 +28,8 @@ class Mirror:
                  mask_name: Optional[str] = None,
                  world: Optional[carla.World] = None,
                  shader: Optional[str] = None,
-                 is_camera: bool = False) -> None:
+                 is_camera: bool = False,
+                 screen: Optional[int] = None) -> None:
         self.world = world
         
         self.enabled = True
@@ -37,7 +39,7 @@ class Mirror:
         
         # Internal
 
-        self._settings = MirrorSettings.create(side)
+        self._settings, settings_are_loaded = MirrorSettings.create(side)
         
         if size:
             self.width = size[0]
@@ -63,7 +65,16 @@ class Mirror:
 
         self._is_mouse_down: bool = False
         self._mouse_pos: Tuple[int, int] = (0, 0)
-        self._window_pos: Tuple[int, int] = (self._settings.x, self._settings.y)
+        
+        pos = self._settings.x, self._settings.y
+        if screen is not None and not settings_are_loaded:
+            monitors = win32api.EnumDisplayMonitors()
+            if len(monitors) > screen:
+                info = monitors[screen]
+                rect = info[2]
+                pos = rect[0], rect[1]
+             
+        self._window_pos: Tuple[int, int] = pos
         
         self._brightness = self.brightness
         self._must_scale = False
