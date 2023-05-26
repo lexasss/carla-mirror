@@ -9,7 +9,7 @@ class ActionType(IntEnum):
 
     MOUSE = 4
     MOUSEMOVE = 5
-    OFFSET = 6
+    MIRROR_VIEW_OFFSET = 6
 
     SPAWN_TARGET = 8
     SPAWN_TARGET_NEARBY = 9
@@ -49,17 +49,17 @@ class DriverTask:
         # 'barrel': 'BARREL',
         'clothcontainer': 'CLOTH CONTAINER',
         'glasscontainer': 'GLASS CONTAINER',
-        'trashcan05': 'TRASH CAN',
+        # 'trashcan05': 'TRASH CAN',
         'plastictable': 'PLASTIC TABLE',
         'slide': 'SLIDE',
         'swingcouch': 'SWING COUCH',
         'trampoline': 'TRAMPOLINE',
         'travelcase': 'TRAVEL CASE',
-        'trafficcone01': 'TRAFIC CONE',
+        'trafficcone01': 'TRAFFIC CONE',
         # 'kiosk_01': 'KIOSK',
         'fountain': 'FOUNTAIN',
         # 'advertisement': 'ADVERTISEMENT',
-        'mailbox': 'MAILBOX',
+        # 'mailbox': 'MAILBOX',
         'vendingmachine': 'VENDING MACHINE'
     }
 
@@ -74,24 +74,35 @@ class UserAction:
         pygame.constants.K_F5: Action(ActionType.REMOVE_TARGETS),
         pygame.constants.K_F6: Action(ActionType.REMOVE_CARS),
         
-        pygame.constants.K_1: Action(ActionType.SPAWN_TARGET, 'bin'),
-        pygame.constants.K_2: Action(ActionType.SPAWN_TARGET, 'barrel'),
-        pygame.constants.K_3: Action(ActionType.SPAWN_TARGET, 'clothcontainer'),
-        pygame.constants.K_4: Action(ActionType.SPAWN_TARGET, 'trashcan01'),
-        pygame.constants.K_5: Action(ActionType.SPAWN_TARGET, 'plastictable'),
-        pygame.constants.K_6: Action(ActionType.SPAWN_TARGET, 'slide'),
-        pygame.constants.K_7: Action(ActionType.SPAWN_TARGET, 'trampoline'),
-        pygame.constants.K_8: Action(ActionType.SPAWN_TARGET, 'travelcase'),
-        pygame.constants.K_9: Action(ActionType.SPAWN_TARGET, 'travelcase'),
-        pygame.constants.K_0: Action(ActionType.SPAWN_TARGET, 'trafficcone01'),
-        pygame.constants.K_q: Action(ActionType.SPAWN_TARGET, 'kiosk_01'),
-        pygame.constants.K_w: Action(ActionType.SPAWN_TARGET, 'advertisement'),
-        pygame.constants.K_e: Action(ActionType.SPAWN_TARGET, 'mailbox'),
+        pygame.constants.K_F9: Action(ActionType.DEBUG_TCP),
         
-        pygame.constants.K_x: Action(ActionType.PRINT_INFO),
-        pygame.constants.K_c: Action(ActionType.TOGGLE_NIGHT),
+        pygame.constants.K_1: Action(ActionType.SPAWN_TARGET, 'clothcontainer'),
+        pygame.constants.K_2: Action(ActionType.SPAWN_TARGET, 'plastictable'),
+        pygame.constants.K_3: Action(ActionType.SPAWN_TARGET, 'slide'),
+        pygame.constants.K_4: Action(ActionType.SPAWN_TARGET, 'trampoline'),
+        pygame.constants.K_5: Action(ActionType.SPAWN_TARGET, 'swingcouch'),
+        pygame.constants.K_6: Action(ActionType.SPAWN_TARGET, 'travelcase'),
+        pygame.constants.K_7: Action(ActionType.SPAWN_TARGET, 'glasscontainer'),
+        pygame.constants.K_8: Action(ActionType.SPAWN_TARGET, 'trafficcone01'),
+        pygame.constants.K_9: Action(ActionType.SPAWN_TARGET, 'fountain'),
+        pygame.constants.K_0: Action(ActionType.SPAWN_TARGET, 'vendingmachine'),
+
+        pygame.constants.K_q: Action(ActionType.PRINT_INFO, 'spawn'),
+        pygame.constants.K_w: Action(ActionType.PRINT_INFO, 'landmarks'),
+        pygame.constants.K_e: Action(ActionType.PRINT_INFO, 'lights'),
+        pygame.constants.K_r: Action(ActionType.PRINT_INFO, 'topology'),
+        pygame.constants.K_t: Action(ActionType.PRINT_INFO, 'waypoints'),
+        pygame.constants.K_y: Action(ActionType.PRINT_INFO, 'egocar_waypoint'),
+        pygame.constants.K_h: Action(ActionType.PRINT_INFO, 'target_waypoint'),
+        
+        pygame.constants.K_u: Action(ActionType.DEBUG_TASK_SCREEN, ('button', 'Done')),
+        pygame.constants.K_i: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', True)),
+        pygame.constants.K_o: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', False)),
+        pygame.constants.K_p: Action(ActionType.DEBUG_TASK_SCREEN, ('message', 'Find something', DriverTask.TARGETS['clothcontainer'])),
+        
+        pygame.constants.K_a: Action(ActionType.TOGGLE_NIGHT),
         pygame.constants.K_s: Action(ActionType.TOGGLE_SPECTATOR_AS_DRIVER),
-        
+
         pygame.constants.K_n: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_next_lane, 30)),
         pygame.constants.K_m: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_same_lane, 30)),
         pygame.constants.K_COMMA: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.random, 0)),
@@ -99,21 +110,14 @@ class UserAction:
         pygame.constants.K_LEFT: Action(ActionType.LANE_LEFT),
         pygame.constants.K_RIGHT: Action(ActionType.LANE_RIGHT),
 
-        pygame.constants.K_KP4: Action(ActionType.OFFSET, 'l'),
-        pygame.constants.K_KP6: Action(ActionType.OFFSET, 'r'),
-        pygame.constants.K_KP8: Action(ActionType.OFFSET, 'u'),
-        pygame.constants.K_KP2: Action(ActionType.OFFSET, 'd'),
-        pygame.constants.K_KP7: Action(ActionType.OFFSET, 'lu'),
-        pygame.constants.K_KP1: Action(ActionType.OFFSET, 'ld'),
-        pygame.constants.K_KP9: Action(ActionType.OFFSET, 'ru'),
-        pygame.constants.K_KP3: Action(ActionType.OFFSET, 'rd'),
-
-        pygame.constants.K_F9: Action(ActionType.DEBUG_TCP),
-        
-        pygame.constants.K_u: Action(ActionType.DEBUG_TASK_SCREEN, ('button', 'Done')),
-        pygame.constants.K_i: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', True)),
-        pygame.constants.K_o: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', False)),
-        pygame.constants.K_p: Action(ActionType.DEBUG_TASK_SCREEN, ('message', 'Find something', DriverTask.TARGETS['trashcan05'])),
+        pygame.constants.K_KP4: Action(ActionType.MIRROR_VIEW_OFFSET, 'l'),
+        pygame.constants.K_KP6: Action(ActionType.MIRROR_VIEW_OFFSET, 'r'),
+        pygame.constants.K_KP8: Action(ActionType.MIRROR_VIEW_OFFSET, 'u'),
+        pygame.constants.K_KP2: Action(ActionType.MIRROR_VIEW_OFFSET, 'd'),
+        pygame.constants.K_KP7: Action(ActionType.MIRROR_VIEW_OFFSET, 'lu'),
+        pygame.constants.K_KP1: Action(ActionType.MIRROR_VIEW_OFFSET, 'ld'),
+        pygame.constants.K_KP9: Action(ActionType.MIRROR_VIEW_OFFSET, 'ru'),
+        pygame.constants.K_KP3: Action(ActionType.MIRROR_VIEW_OFFSET, 'rd'),
     }
     
     @staticmethod

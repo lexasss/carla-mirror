@@ -11,6 +11,7 @@ from src.exp.task_screen import TaskScreenRequests, TaskScreenRequest, TaskScree
 from src.exp.logging import EventLogger
 from src.exp.delayed_task import DelayedTask
 from src.exp.mirror_status import MirrorStatus, NetCmd
+from src.exp.scoring import Scoring
 
 from src.net.tcp_server import TcpServer
 
@@ -32,12 +33,13 @@ class Scenario:
                  cmd_server: Optional[TcpServer],
                  mirror_status: MirrorStatus) -> None:
         
-        self.search_target_distance = 0.0
-        
         self._mirror_status = mirror_status
 
         self._task_screen = task_screen
         self._task_screen.set_callback(lambda request: self._task_screen_requests.put(request))
+        
+        self._search_target_distance = 0.0
+        self._scoring = Scoring(lambda score: self._task_screen.show_score(score))
         
         self._task_screen_requests: SimpleQueue[TaskScreenRequest] = SimpleQueue()
         self._controller_actions: SimpleQueue[Action] = SimpleQueue()
@@ -67,7 +69,9 @@ class Scenario:
     def start(self) -> None:
         self._is_running = True
         
+        self._scoring.reset()
         self._next_task()
+        
         self._delayed_tasks.append(DelayedTask(1.0, self._spawn_random_target))
         self._delayed_tasks.append(DelayedTask(2.0, self._spawn_next_car))
         
@@ -79,9 +83,16 @@ class Scenario:
         while not self._task_screen_requests.empty():
             request = self._task_screen_requests.get()
             if request.type == TaskScreenRequests.target:
-                self._logger.log('target', 'noticed', f'{self.search_target_distance:.1f}')
-                self._spawn_random_target()
+                self._scoring.target_noticed()
+                self._logger.log('target', 'noticed', f'{self._search_target_distance:.1f}')
+                
+                self._target_timestamp = 0.0
+                self._controller_actions.put(Action(ActionType.REMOVE_TARGETS))
+                self._delayed_tasks.append(DelayedTask(0.5, self._spawn_random_target))
+
             elif request.type == TaskScreenRequests.questionnaire:
+                self._scoring.set_task_result(cast(int, request.data))
+                
                 # we got a response to the questionnaire, lets resume driving
                 self._logger.log('evaluation', 'response', request.data)
                 self._task_waiting_for_reply = False
@@ -115,13 +126,18 @@ class Scenario:
             print(f'SCN: action {result.type} ({result.param})')
             return result
         
-    def set_nearest_vehicle_behind(self, name: str, disatnce: float, lane: str, ego_car_speed: float) -> bool:
+    def set_search_target_distance(self, dist: float) -> None:
+        self._search_target_distance = dist
+        self._scoring.set_target_distance(dist)
+        
+    def set_nearest_vehicle_behind(self, name: str, distance: float, lane: str, ego_car_speed: float) -> bool:
         if not self._is_running:
             return False
         
         if not self._task_waiting_for_reply:
-            if ego_car_speed > MIN_EGOCAR_SPEED_TO_EVALUATE_LINE_CHANGE_SAFETY and disatnce < self._task_distance:
+            if ego_car_speed > MIN_EGOCAR_SPEED_TO_EVALUATE_LINE_CHANGE_SAFETY and distance < self._task_distance:
                 self._clear_tasks()
+                self._scoring.set_task(distance, lane, ego_car_speed)
 
                 self._task_waiting_for_reply = True
                 self._task_screen.show_questionnaire()
@@ -130,7 +146,7 @@ class Scenario:
                 self._controller_actions.put(Action(ActionType.FREEZE))
                 
                 name = '_'.join(name.split('.')[1:])
-                self._logger.log('car', 'approached', name, lane, f'{disatnce:.1f}')
+                self._logger.log('car', 'approached', name, lane, f'{distance:.1f}')
                 self._logger.log('evaluation', 'request')
                 
                 if self._cmd_server:
@@ -186,6 +202,7 @@ class Scenario:
 
         name = '_'.join(target_id.split('.')[1:])
         self._logger.log('target', 'spawned', name)
+        self._scoring.set_target()
         
         self._target_timestamp = time.perf_counter()
         print('\007')
@@ -217,7 +234,8 @@ class Scenario:
             self._cmd_server.send(NetCmd.show_mirror)
         
     def _clear_tasks(self) -> None:
-        print(f'[SCN] Cancelling {len(self._delayed_tasks)} tasks')
+        print(f'SCN Cancelling {len(self._delayed_tasks)} tasks')
         for task in self._delayed_tasks:
+            print(f'SCN     {task}')
             task.cancel()
         self._delayed_tasks.clear()

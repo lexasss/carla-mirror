@@ -63,7 +63,7 @@ class Runner:
 
         # respond to a keypress
         if action:
-            spawned = self._execute_action(action, ego_car_snapshot)
+            spawned = self._execute_action(action, world_snapshot, ego_car_snapshot)
             if spawned:
                 if action.type == ActionType.SPAWN_TARGET or action.type == ActionType.SPAWN_TARGET_NEARBY:
                     self.search_target = spawned
@@ -117,6 +117,7 @@ class Runner:
 
     def _execute_action(self,
                         action: Action,
+                        world_snapshot: carla.WorldSnapshot,
                         ego_car_snapshot: carla.ActorSnapshot) -> Optional[carla.Actor]:
         spawned: Optional[carla.Actor] = None
         
@@ -139,13 +140,27 @@ class Runner:
             self._last_vehicle = None
 
         elif action.type == ActionType.PRINT_INFO:
-            self.controller.print_closest_waypoint(ego_car_snapshot)
+            if action.param == 'spawn':
+                self.controller.print_spawn_points()
+            elif action.param == 'landmarks':
+                self.controller.print_landmarks()
+            elif action.param == 'lights':
+                self.controller.print_lights()
+            elif action.param == 'topology':
+                self.controller.print_map_topology()
+            elif action.param == 'waypoints':
+                self.controller.print_waypoints()
+            elif action.param == 'egocar_waypoint':
+                self.controller.print_closest_waypoint(ego_car_snapshot)
+            elif action.param == 'target_waypoint':
+                if self.search_target:
+                    self.controller.print_closest_waypoint(world_snapshot.find(self.search_target.id))
         elif action.type == ActionType.TOGGLE_NIGHT:
             self.controller.toiggle_night()
         elif action.type == ActionType.TOGGLE_MIRROR_DIMMING:
             self.mirror.toggle_brightness()
 
-        elif action.type == ActionType.OFFSET:
+        elif action.type == ActionType.MIRROR_VIEW_OFFSET:
             self.mirror.on_offset(cast(str, action.param))
 
         elif action.type == ActionType.START_SCENARIO:

@@ -186,7 +186,7 @@ class App:
                             scenario.start()
                     elif action.type == ActionType.MOUSE:
                         mirror.on_mouse(cast(str, action.param))
-                    elif action.type == ActionType.OFFSET:
+                    elif action.type == ActionType.MIRROR_VIEW_OFFSET:
                         mirror.on_offset(cast(str, action.param))
                     elif action.type == ActionType.DEBUG_TASK_SCREEN:
                         if scenario:
@@ -209,7 +209,7 @@ class App:
         elif settings.side == Side.LEFT or settings.side == Side.RIGHT:
             return SideMirror(settings, world, ego_car)
         else:
-            print(f'Unknown mirror type: "{settings.side}"')
+            print(f'APP Unknown mirror type: "{settings.side}"')
             raise IndexError
 
     def _handle_action(self,
@@ -242,14 +242,13 @@ class App:
                                runner: Runner,
                                ego_car_snapshot: carla.ActorSnapshot) -> None:
         if runner.search_target is None:
-            scenario.search_target_distance = 0
+            scenario.set_search_target_distance(0)
         else:
-            scenario.search_target_distance = runner.controller.get_distance_to(ego_car_snapshot, runner.search_target)
+            scenario.set_search_target_distance(runner.controller.get_distance_to(ego_car_snapshot, runner.search_target))
         
-        monitor = runner.monitor
-        vehicle, distance = monitor.get_nearest_vehicle_behind(ego_car_snapshot)
+        vehicle, distance = runner.monitor.get_nearest_vehicle_behind(ego_car_snapshot)
         if vehicle:
-            lane = monitor.get_lane(ego_car_snapshot, vehicle)
+            lane = runner.monitor.get_lane(ego_car_snapshot, vehicle)
             if lane:
                 scenario.set_nearest_vehicle_behind(vehicle.type_id, distance, lane, runner.ego_car_speed)
         

@@ -10,6 +10,9 @@ class DelayedTask:
         self._start = time.perf_counter()
         self._is_active = True
         self._is_repetitive = is_repetitive
+        
+    def __str__(self) -> str:
+        return f'{self._cb.__name__}'
 
     def tick(self) -> bool:
         if (time.perf_counter() - self._start) > self._delay:

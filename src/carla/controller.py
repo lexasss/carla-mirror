@@ -28,9 +28,9 @@ class CarlaController:
         display_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, DISPLAY_X, DISPLAY_Y, DISPLAY_Z - 0 * DISPLAY_LINE_HEIGHT)
 
         name = target.type_id.split('.')[2]
-        # dist = CarlaController.get_distance_to(ego_car_snapshot, target)
-        # self.debug.draw_string(display_location, f'{name} is {dist:.2f} m away', color = DISPLAY_ACTOR_INFO_COLOR)
-        self.debug.draw_string(display_location, f'Target: {name.upper()}', color = DISPLAY_ACTOR_INFO_COLOR)
+        dist = CarlaController.get_distance_to(ego_car_snapshot, target)
+        self.debug.draw_string(display_location, f'Target: {name.upper()}, {dist:.2f} m', color = DISPLAY_ACTOR_INFO_COLOR)
+        # self.debug.draw_string(display_location, f'Target: {name.upper()}', color = DISPLAY_ACTOR_INFO_COLOR)
 
     def display_vehicle_info(self, ego_car_snapshot: carla.ActorSnapshot, vehicle: carla.Vehicle) -> None:
         display_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, DISPLAY_X, DISPLAY_Y, DISPLAY_Z - 1 * DISPLAY_LINE_HEIGHT)
@@ -45,7 +45,6 @@ class CarlaController:
         self.debug.draw_string(display_location, f'{speed:.1f} km/h', color = DISPLAY_EGOCAR_INFO_COLOR)
 
     def display_info(self, ego_car_snapshot: carla.ActorSnapshot, text: Optional[str] = None) -> None:
-        print(text)
         self._info = text
         self.update_info(ego_car_snapshot)
 
@@ -182,32 +181,29 @@ class CarlaController:
     # Debug info print to console
     
     def print_spawn_points(self) -> None:
-        for p in self.world.get_map().get_spawn_points():
-            print(f'{p.location.x} {p.location.y}')
+        output = open('logs/spawns.txt', 'w')
+        output.writelines([f'{p.location.x}\t{p.location.y}\n' for p in self.world.get_map().get_spawn_points()])
     def print_landmarks(self) -> None:
-        for p in self.world.get_map().get_all_landmarks():
-            loc = p.transform.location
-            print(f'{loc.x} {loc.y}')
+        output = open('logs/landmarks.txt', 'w')
+        output.writelines([f'{p.transform.location.x}\t{p.transform.location.y}\n' for p in self.world.get_map().get_all_landmarks()])
     def print_lights(self) -> None:
-        for p in self.world.get_lightmanager().get_all_lights():
-            print(f'{p.location.x} {p.location.y}')
+        output = open('logs/lights.txt', 'w')
+        output.writelines([f'{p.location.x}\t{p.location.y}\n' for p in self.world.get_lightmanager().get_all_lights()])
+    def print_map_topology(self) -> None:
+        output = open('logs/topology.txt', 'w')
+        output.writelines([f'{p[0].transform.location.x}\t{p[0].transform.location.y}\n' for p in self.world.get_map().get_topology()])
     def print_waypoints(self) -> None:
-        for p in self.world.get_map().get_topology():
-            loc = p[0].transform.location
-            print(f'{loc.x} {loc.y}')
-    def print_waypoints_gen(self) -> None:
-        waypoints = self.world.get_map().generate_waypoints(5)
-        output = open('wp.txt', 'w')
-        for p in waypoints:
-            output.write(f'{p.transform.location.x} {p.transform.location.y}\n')
-    def print_closest_waypoint(self, ego_car_snapshot: carla.ActorSnapshot) -> None:
-        waypoint = self.world.get_map().get_waypoint(
-            ego_car_snapshot.get_transform().location,
-            project_to_road=True,
-            lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder)
-        if waypoint:
-            print("Waypoint: " + str(waypoint.transform.location))
-            print(f"Current lane type: {waypoint.lane_type}, {waypoint.lane_id}, {waypoint.lane_change}, {waypoint.lane_width}")
+        output = open('logs/waypoints.txt', 'w')
+        output.writelines([f'{p.transform.location.x}\t{p.transform.location.y}\n' for p in self.world.get_map().generate_waypoints(5)])
+    def print_closest_waypoint(self, object: Optional[carla.ActorSnapshot]) -> None:
+        if object:
+            output = open('logs/custom.txt', 'a')
+            waypoint = self.world.get_map().get_waypoint(
+                object.get_transform().location,
+                project_to_road=True,
+                lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder)
+            if waypoint:
+                output.write(f'{waypoint.transform.location.x}\t{waypoint.transform.location.y}\t{waypoint.transform.location.x}\t{waypoint.transform.location.y}\t{waypoint.lane_type}\t{waypoint.lane_id}\t{waypoint.lane_change}\t{waypoint.lane_width}\n')
 
     @staticmethod
     def get_distance_to(ego_car_snapshot: carla.ActorSnapshot, target: carla.Actor) -> float:
