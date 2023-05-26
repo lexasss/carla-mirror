@@ -62,6 +62,7 @@ class Scenario:
         self._car_spawning_location_index = 0
 
         self._cmd_server = cmd_server
+        self._target_type: Optional[str] = None
         self._target_timestamp = 0.0
         
         self._is_running = False
@@ -117,8 +118,8 @@ class Scenario:
                 
         if (self._target_timestamp > 0.0 and time.perf_counter() - self._target_timestamp) > MAX_TARGET_LIFESPAN:
             self._target_timestamp = 0.0
-            self._controller_actions.put(Action(ActionType.REMOVE_TARGETS))
             self._delayed_tasks.append(DelayedTask(0.5, self._spawn_random_target))
+            self._controller_actions.put(Action(ActionType.REMOVE_TARGETS))
     
     def get_action(self) -> Optional[Action]:
         if not self._controller_actions.empty():
@@ -198,17 +199,21 @@ class Scenario:
     # Internal
 
     def _spawn_random_target(self) -> None:
-        target_id = random.choice([x for x in DriverTask.TARGETS])
+        target_type = random.choice([x for x in DriverTask.TARGETS])
+        while target_type == self._target_type:
+            target_type = random.choice([x for x in DriverTask.TARGETS])
+            
+        self._target_type = target_type
 
-        name = '_'.join(target_id.split('.')[1:])
+        name = '_'.join(target_type.split('.')[1:])
         self._logger.log('target', 'spawned', name)
         self._scoring.set_target()
         
         self._target_timestamp = time.perf_counter()
         print('\007')
 
-        self._controller_actions.put(Action(ActionType.SPAWN_TARGET, target_id))
-        self._delayed_tasks.append(DelayedTask(1.0, self._task_screen.show_message, ['Please find', f'{DriverTask.TARGETS[target_id]}']))
+        self._controller_actions.put(Action(ActionType.SPAWN_TARGET, target_type))
+        self._delayed_tasks.append(DelayedTask(1.0, self._task_screen.show_message, ['Please find', f'{DriverTask.TARGETS[target_type]}']))
         self._delayed_tasks.append(DelayedTask(3.0, self._task_screen.show_button))
         
     def _spawn_next_car(self) -> None:
