@@ -16,7 +16,7 @@ class WideviewMirror(Mirror):
     }
 
     CAMERA_PITCH_K = -20        # value of fov per one degree downward: for example, if fov=120 and CAMERA_PITCH_K=-20, then the camera pitch is 120/-20 = -6
-    CAMERA_X = 0.5              # camera sidewise offset
+    CAMERA_X = 0.5              # offset forward
     
     camera_z = 1.8      # one of value from CAMERAS_Z, set via set_camera_offset
     

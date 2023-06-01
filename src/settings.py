@@ -26,6 +26,7 @@ class Settings:
         self.primary_mirror_host: str = args.primary_mirror_host
         self.is_primary_mirror = args.adopt_egocar == True
         self.is_manual_mode = args.manual == True
+        self.is_shader_control_by_mouse = args.shader_mouse == True
 
         if self.size[0] == 0 or self.size[1] == 0:
             self.size = None
@@ -68,6 +69,11 @@ def make_args():
         '--distort',
         action='store_true',
         help='Distort the mirror view')
+    argparser.add_argument(
+        '-u',
+        '--shader-mouse',
+        action='store_true',
+        help='Shander control by mouse')
     argparser.add_argument(
         '-r',
         '--res',

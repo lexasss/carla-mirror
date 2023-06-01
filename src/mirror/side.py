@@ -32,17 +32,21 @@ class SideMirror(Mirror):
                  world: Optional[carla.World] = None,
                  vehicle: Optional[carla.Vehicle] = None) -> None:
 
+        shader = 'unzoom_side' if settings.distort else None
         super().__init__([480, 320],
                          size = settings.size,
                          side = settings.side.value,
                          mask_name = f'{settings.side.value}_mirror',
-                         world = world) 
+                         world = world,
+                         shader = shader) 
                 
         if not self._settings.is_initialized():
             screen_size = pygame.display.get_desktop_sizes()[0]
             self._window_pos = (0 if settings.side == Side.LEFT else screen_size[0] - self.width, screen_size[1] - self.height)
         
         self._display = self._make_display((self.width, self.height))
+        if self._display_gl:
+            self._display_gl.inject_uniforms(reversed = settings.side == Side.RIGHT)
         
         cam_y, cam_rot = (-SideMirror.camera_offset.left, 180 + SideMirror.CAMERA_YAW) if settings.side == Side.LEFT else (SideMirror.camera_offset.left, 180 - SideMirror.CAMERA_YAW)
         transform = carla.Transform(

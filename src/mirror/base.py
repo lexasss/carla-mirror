@@ -1,4 +1,5 @@
 from src.winapi import Window
+from src.settings import Settings
 from src.mirror.settings import MirrorSettings
 from src.mirror.opengl_renderer import OpenGLRenderer
 
@@ -150,14 +151,15 @@ class Mirror:
                 self._display_gl.zoomIn()
         elif cmd == 'scroll_down':
             if self._display_gl:
-                self._display_gl.zoomOut()
+                self._display_gl.zoom_out()
                 
 
     # Internal
 
     def _make_display(self, size: Tuple[int, int]) -> pygame.surface.Surface:
         if self.shader:
-            self._display_gl = OpenGLRenderer(size, self.shader, self.world is None)
+            settings = Settings()
+            self._display_gl = OpenGLRenderer(size, self.shader, self.world is None, settings.is_shader_control_by_mouse)
             display = self._display_gl.screen
         else:
             display = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME)

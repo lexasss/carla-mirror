@@ -49,11 +49,9 @@ class Scoring:
         if self._target_distance < 100:
             # probably, target will be visible no more that from this far
             self._score += int(self._score_for_target)
-            print(F'Nice!')
         else:
             # this is a fake notice: the target was too far to notice
             self._score -= PENALTY
-            print(F'You are bluffing!')
             
         self._cb(self._score)
     
@@ -84,18 +82,14 @@ class Scoring:
 
         if diff == 0:
             self._score += int(self._score_for_task)
-            print(F'Great!')
         elif diff == 1:
             self._score += int(self._score_for_task / 2)
-            print(F'Almost')
         elif diff == 2:
             # no points earned, as the response is not correct
-            print(F'Hmmm...')
             pass
-        elif diff == 3:
+        elif diff >= 3:
             # apply a penalty, as the response is completely wrong
             self._score -= PENALTY
-            print(F'Way off...')
             
         self._cb(self._score)
         

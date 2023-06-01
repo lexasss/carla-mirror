@@ -5,10 +5,12 @@ import pygame
 import struct
 import moderngl
 
-SHADER_CONTROL_WITH_MOUSE = False
-
 class OpenGLRenderer:
-    def __init__(self, size: Tuple[int,int], shader_name: str = '', display_check_matrix: bool = False):
+    def __init__(self, 
+                 size: Tuple[int,int],
+                 shader_name: str = '',
+                 display_check_matrix: bool = False,
+                 is_shader_control_by_mouse: bool = False):
         screen = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.OPENGL | pygame.constants.NOFRAME ).convert((0xff, 0xff00, 0xff0000, 0))
         ctx = moderngl.create_context()
 
@@ -42,20 +44,27 @@ class OpenGLRenderer:
 
         self.screen = screen
         self.mouse = 0.0, 0.0
+        self._is_shader_control_by_mouse = is_shader_control_by_mouse
         
         #self.ctx = ctx
 
         self._glsl_uniforms: Set[str] = set()
-        self._injectUniform(size, display_check_matrix)
+        self._inject_uniforms(size, display_check_matrix)
         
-    def zoomIn(self):
+    def inject_uniforms(self, **kwargs: Any) -> None:
+        for u in kwargs:
+            uniform_name = f'u_{u}'
+            if (uniform_name in self._glsl_uniforms):
+                self._program[uniform_name] = kwargs[u]
+        
+    def zoomIn(self) -> None:
         self._zoom += 0.1
 
-    def zoomOut(self):
+    def zoom_out(self) -> None:
         self._zoom -= 0.1
 
-    def render(self, texture_data: Any):
-        if SHADER_CONTROL_WITH_MOUSE:
+    def render(self, texture_data: Any) -> None:
+        if self._is_shader_control_by_mouse:
             if ('u_time' in self._glsl_uniforms):
                 self._program['u_time'] = datetime.now().timestamp() - self._timestamp
             if ('u_mouse' in self._glsl_uniforms):
@@ -69,7 +78,9 @@ class OpenGLRenderer:
         
     # Internal
 
-    def _injectUniform(self, size: Tuple[int,int], colorize: bool):
+    def _inject_uniforms(self,
+                       size: Tuple[int,int],
+                       colorize: bool) -> None:
         # only for debugging
         for name in self._program:
             member = self._program[name]
@@ -79,7 +90,7 @@ class OpenGLRenderer:
             elif isinstance(member, moderngl.Attribute):
                 print(f'OGL: {member.location}: in [{member.dimension}] {name}')
         
-        if SHADER_CONTROL_WITH_MOUSE:
+        if self._is_shader_control_by_mouse:
             if ('u_resolution' in self._glsl_uniforms):
                 self._program['u_resolution'] = size
             if ('u_colorize' in self._glsl_uniforms):

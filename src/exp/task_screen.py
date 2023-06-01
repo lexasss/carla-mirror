@@ -16,13 +16,6 @@ class TaskScreenRequests:
     questionnaire = 'questionnaire'
     target = 'target'
 
-TaskResponse = {
-    0: 'safe',
-    1: 'maybe-safe',
-    2: 'maybe-unsafe',
-    3: 'unsafe'
-}
-    
 class TaskScreen:
     def __init__(self, cb: Optional[Callable[[TaskScreenRequest], None]] = None) -> None:
         self._server = WsServer(self._parse)
