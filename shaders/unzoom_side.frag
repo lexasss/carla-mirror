@@ -40,8 +40,8 @@ const float PHASE_120 = 2.0 * PI / 3.0;
 const vec3 MATRIX_COLOR = vec3(1, 0, 1);
 
 // Constants for image distortion
-const float THRESHOLD = 0.25;
-const float ZOOM = 1.6;
+const float THRESHOLD = 0.30;
+const float ZOOM = 1.4;
 
 // Pipeline attributes
 in vec2 v_uv;      // modernGL only
@@ -54,12 +54,9 @@ void main() {
     uv = v_uv == vec2(0) ? gl_FragCoord.xy / u_resolution : v_uv;
 
     // Choose the source of the parameters of the image distortion algorithm
-    float zoom = u_zoom == 0.0 ? ZOOM : u_zoom;
-    if (u_reversed && zoom != 0.) {
-        zoom = sqrt(1. / zoom);
-    }
+    float zoom = u_zoom == 0. ? ZOOM : u_zoom;
 
-    float threshold = u_mouse.x == 0.0
+    float threshold = u_mouse.x == 0.
         ? (u_reversed ? 1. - THRESHOLD : THRESHOLD)
         : 1. - u_mouse.x / u_resolution.x;
 
@@ -72,7 +69,7 @@ void main() {
     }
     else if (u_reversed) {
         // Line started from the origin
-        float a = zoom;
+        float a = 1. - (1. - threshold) / threshold * (zoom - 1.);
         float b = 0.;
 
         if (uv.x <= threshold) {
@@ -106,7 +103,7 @@ void main() {
     // Calculate the output color
     vec3 color;
 
-    if (uv.x > 1.0 || uv.x < 0.0 || uv.y > 1.0 || uv.y < 0.0) {
+    if (uv.x > 1. || uv.x < 0. || uv.y > 1. || uv.y < 0.) {
         // sets the pixels outside the texture to the blank color
         color = BLANK_COLOR;
     } else {
@@ -122,5 +119,5 @@ void main() {
         }
     }
 
-    out_color = vec4(color, 1.0);
+    out_color = vec4(color, 1.);
 }
