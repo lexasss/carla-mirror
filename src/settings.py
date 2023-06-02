@@ -27,6 +27,7 @@ class Settings:
         self.is_primary_mirror = args.adopt_egocar == True
         self.is_manual_mode = args.manual == True
         self.is_shader_control_by_mouse = args.shader_mouse == True
+        self.is_circular_distortion = args.circular == True
 
         if self.size[0] == 0 or self.size[1] == 0:
             self.size = None
@@ -39,6 +40,9 @@ class Settings:
             self.side = Side.LEFT
         
 def make_args():
+    # q w e         i o
+    #         g h j k l
+    # z     v b n
     argparser = argparse.ArgumentParser(
         description='CARLA mirror')
     argparser.add_argument(
@@ -69,6 +73,11 @@ def make_args():
         '--distort',
         action='store_true',
         help='Distort the mirror view')
+    argparser.add_argument(
+        '-q',
+        '--circular',
+        action='store_true',
+        help='Uses circular curvature instead of linear + parabolic')
     argparser.add_argument(
         '-u',
         '--shader-mouse',

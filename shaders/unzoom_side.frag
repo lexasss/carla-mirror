@@ -1,12 +1,14 @@
 #version 300 es
 
 #ifdef GL_ES
-precision mediump float;
+precision highp float;
 #endif
 
 /*
  The shader has two behaviours:
     1. distorts the image on a side like in real cars
+        a. with linear + parabolic curvature
+        b. with circular curvature
     2. colorizes the inspection matrix pixels
  This shader may run from ModernGL, but also from glslViewer.
  These environments instantiate the uniforms differently,
@@ -30,6 +32,8 @@ uniform float u_zoom;
 uniform bool u_colorize;
 // - reverses the thredhold
 uniform bool u_reversed;
+// - if >0, then the distortios is circular and this parameter is the radius, otherwise it is linear-parabolic
+uniform float u_convex_radius;
 
 const vec3 BLANK_COLOR = vec3(0.0, 0.0, 0.2);
 
@@ -42,10 +46,84 @@ const vec3 MATRIX_COLOR = vec3(1, 0, 1);
 // Constants for image distortion
 const float THRESHOLD = 0.30;
 const float ZOOM = 1.4;
+const float CONVEX_RADIUS = 3.;
 
 // Pipeline attributes
 in vec2 v_uv;      // modernGL only
 out vec4 out_color;
+
+float get_parabolic_left(float x, float threshold, float zoom) {
+    float denom = 1. - threshold;
+
+    // Linear end
+    //   Line crosses (1,1) and (T,zoom*T), where T is the threshold:
+    //      (x - 1)/(T - 1) = (y - 1)/(zoom*T - 1)
+    //      y  = x*(zoom*T - 1)/(T - 1) - T*(1 - zoom)/(T - 1)
+    float a = (1. - zoom * threshold) / denom;
+    float b = threshold * (zoom - 1.) / denom;
+
+    if (x <= threshold) {
+        // Parabolic start. Solving:
+        //   a_*T^2 + b_*T + c_ = 0           - parabola crosses the point (0,0)
+        //   a_*T^2 + b_*T + c_ = a*T + b     - line and parabola intersect at T (threshold)
+        //   2*a_*T + b_ = a                  - line's and parabola's tangentums are same at the intersection point T
+        float a_ =  -b / threshold / threshold;
+        float b_ =  a + 2. * b / threshold;
+        float c_ =  0.;
+        return a_ * x * x + b_ * x + c_;
+    }
+    else {
+        return a * x + b;
+    }
+}
+
+float get_parabolic_right(float x, float threshold, float zoom) {
+    float denom = 1. - threshold;
+
+    // Linear start
+    //   The line crosses the points (0,0) and (T,T-dy), where T is the threshold, and dy is calcualted from 'zoom' as shown below.
+    //   1. Since 'zoom' arg is given for the left-side case (>1), we need to find first what is the difference between
+    //      the undistorted point
+    //          y(T') = x
+    //      and the distorted one 
+    //          y'(T') = zoom*x
+    //      for the left-side case:
+    //          dy(T') = y'(T') - y(T') = zoom*T' - T' = T'*(zoom - 1)
+    //      Note that since the 'threshold' arg (T) was given for the right-side case, it was converted the left-side case threshold T':
+    //          T' = 1 - T
+    //   2. So, as the line crosses (0,0) and (T,T-dy),
+    //      y'(T) = T - T'*(zoom - 1)
+    //   and as the line also crossed (0,0), then the linear equation is 
+    //      (x - 0)/(T - 0) = (y - 0)/(T - T'*(zoom - 1) - 0)
+    //      x/T = y/(T - T'*(zoom - 1))
+    //      y = x*(T - T'*(zoom - 1))/T = x*(1 - T'/T * (zoom - 1))
+    float a = 1. - (1. - threshold) / threshold * (zoom - 1.);
+    float b = 0.;
+
+    if (x <= threshold) {
+        return a * x + b;
+    }
+    else {
+        // Parabolic end. Solving:
+        //   a_*T^2 + b_*T + c_ = a*T + b     - line and parabola intersect at T (threshold)
+        //   2*a_*T + b_ = a                  - line's and parabola's tangentums are same at the intersection point T
+        //   a_ + b_ + c_ = 1                 - parabola crosses the point (1,1)
+        float a_ =  (1. - a - b) / denom / denom;
+        float b_ =  a - 2. * threshold * a_;
+        float c_ = 1. - a_ - b_;
+        return a_ * x * x + b_ * x + c_;
+    }
+}
+
+float get_circluar(float x, float r) {
+    // Circle center
+    float a = (1. - sqrt(2. * r * r - 1.)) / 2.;
+    float b = 1. - a;   //(1. + sqrt(2. * r * r - 1.)) / 2.;
+
+    float dx = x - b;
+    return sqrt(r * r - dx * dx) + a;
+}
+
 
 void main() {
     vec2 uv;
@@ -55,49 +133,25 @@ void main() {
 
     // Choose the source of the parameters of the image distortion algorithm
     float zoom = u_zoom == 0. ? ZOOM : u_zoom;
+    float radius = u_convex_radius < 1. ? CONVEX_RADIUS : u_convex_radius;
 
     float threshold = u_mouse.x == 0.
         ? (u_reversed ? 1. - THRESHOLD : THRESHOLD)
         : 1. - u_mouse.x / u_resolution.x;
 
     // Apply distortion
-    float zy = zoom * threshold;
-    float denom = 1. - threshold;
-
     if (threshold < 0. || threshold > 1. || zoom <= 0.) {
         // do nothing
     }
     else if (u_reversed) {
-        // Line started from the origin
-        float a = 1. - (1. - threshold) / threshold * (zoom - 1.);
-        float b = 0.;
-
-        if (uv.x <= threshold) {
-            uv.x = a * uv.x + b;
-        }
-        else {
-            // Parabolic end
-            float a_ =  (1. - a - b) / denom / denom;
-            float b_ =  a - 2. * threshold * a_;
-            float c_ = 1. - a_ - b_;
-            uv.x = a_ * uv.x * uv.x + b_ * uv.x + c_;
-        }
+        uv.x = u_convex_radius != 0.
+            ? get_circluar(uv.x, radius)
+            : get_parabolic_right(uv.x, threshold, zoom);
     }
     else {
-        // Line ending in (1,1)
-        float a = (1. - zy) / denom;
-        float b = (zy - threshold) / denom;
-
-        if (uv.x <= threshold) {
-            // Parabolic start
-            float a_ =  -b / threshold / threshold;
-            float b_ =  a + 2. * b / threshold;
-            uv.x = a_ * uv.x * uv.x + b_ * uv.x;
-        }
-        else {
-            uv.x = a * uv.x + b;
-        }
-        // uv.x *= zoom;
+        uv.x = u_convex_radius != 0.
+            ? get_circluar(uv.x, radius)
+            : get_parabolic_left(uv.x, threshold, zoom);
     }
 
     // Calculate the output color

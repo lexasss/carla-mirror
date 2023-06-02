@@ -159,7 +159,12 @@ class Mirror:
     def _make_display(self, size: Tuple[int, int]) -> pygame.surface.Surface:
         if self.shader:
             settings = Settings()
-            self._display_gl = OpenGLRenderer(size, self.shader, self.world is None, settings.is_shader_control_by_mouse)
+            self._display_gl = OpenGLRenderer(
+                size,
+                self.shader,
+                self.world is None,
+                settings.is_shader_control_by_mouse,
+                settings.is_circular_distortion)
             display = self._display_gl.screen
         else:
             display = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME)

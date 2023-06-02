@@ -10,7 +10,8 @@ class OpenGLRenderer:
                  size: Tuple[int,int],
                  shader_name: str = '',
                  display_check_matrix: bool = False,
-                 is_shader_control_by_mouse: bool = False):
+                 is_shader_control_by_mouse: bool = False,
+                 is_circular_distortion: bool = False):
         screen = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.OPENGL | pygame.constants.NOFRAME ).convert((0xff, 0xff00, 0xff0000, 0))
         ctx = moderngl.create_context()
 
@@ -39,12 +40,15 @@ class OpenGLRenderer:
         screen_texture.repeat_y = False
         self._screen_texture = screen_texture
 
-        self._zoom = 0.5
+        self._zoom = 1.4
+        self._convex_radius = 3.
         self._timestamp = datetime.now().timestamp()
 
         self.screen = screen
         self.mouse = 0.0, 0.0
+
         self._is_shader_control_by_mouse = is_shader_control_by_mouse
+        self._is_circular_distortion = is_circular_distortion
         
         #self.ctx = ctx
 
@@ -59,9 +63,11 @@ class OpenGLRenderer:
         
     def zoomIn(self) -> None:
         self._zoom += 0.1
+        self._convex_radius -= 0.25
 
     def zoom_out(self) -> None:
         self._zoom -= 0.1
+        self._convex_radius += 0.25
 
     def render(self, texture_data: Any) -> None:
         if self._is_shader_control_by_mouse:
@@ -95,4 +101,6 @@ class OpenGLRenderer:
                 self._program['u_resolution'] = size
             if ('u_colorize' in self._glsl_uniforms):
                 self._program['u_colorize'] = colorize
+            if ('u_convex_radius' in self._glsl_uniforms):
+                self._program['u_convex_radius'] = self._convex_radius if self._is_circular_distortion else 0.0
         
