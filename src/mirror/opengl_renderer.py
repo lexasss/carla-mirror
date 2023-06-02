@@ -77,6 +77,8 @@ class OpenGLRenderer:
                 self._program['u_mouse'] = self.mouse
             if ('u_zoom' in self._glsl_uniforms):
                 self._program['u_zoom'] = self._zoom
+            if ('u_convex_radius' in self._glsl_uniforms):
+                self._program['u_convex_radius'] = self._convex_radius if self._is_circular_distortion else 0.0
         
         self._screen_texture.write(texture_data)
         self._screen_texture.use()
@@ -101,6 +103,4 @@ class OpenGLRenderer:
                 self._program['u_resolution'] = size
             if ('u_colorize' in self._glsl_uniforms):
                 self._program['u_colorize'] = colorize
-            if ('u_convex_radius' in self._glsl_uniforms):
-                self._program['u_convex_radius'] = self._convex_radius if self._is_circular_distortion else 0.0
         

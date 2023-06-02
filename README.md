@@ -2,12 +2,13 @@
 
 ## Requires
 
-Python 3.7.9
-[VC++ 2019 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+- CARLA 0.9.13
+- Python 3.7.9
+- [VC++ 2019 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
 ## Setup
 
-The project mus tbe located inside CARLA's PythonAPI folder, so that `PythonAPI/carla/dist` exists nearby
+The project must be located inside CARLA's PythonAPI folder
 
 ### Configuring Pylance (`Python > Analysis`)
 
@@ -20,10 +21,10 @@ It is expected that
 ### External dependencies
 
 - [glslViewer](https://github.com/patriciogonzalezvivo/glslViewer) to inspect the shader (run `glslViewer ./shaders/zoom_x.frag "path/to/some/image.png"`)
-- [glslang@12.1](https://github.com/KhronosGroup/glslang) for GLSL Linter extension to be set in `Validator Path` in its settings (clone this repo)
+- [glslang@12.1](https://github.com/KhronosGroup/glslang) binaries: path to `glslangValidator` to be set in `Validator Path` of __GLSL Linter__ extension settings
 
 ### Virtual environment and installing dependencies
 
 After cloning the project, run the following scripts form the VS Code terminal
  - `env.bat` to create the virtual environment,
- - `install.bat` to install dependencies
+ - `install.bat` to install dependencies (make sure you run this in the cmd line prefixed with )
