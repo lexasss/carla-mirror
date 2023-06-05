@@ -25,7 +25,7 @@ class Mirror:
     def __init__(self,
                  default_size: List[int],
                  size: Optional[List[int]],
-                 side: str,
+                 type: str,
                  mask_name: Optional[str] = None,
                  world: Optional[carla.World] = None,
                  shader: Optional[str] = None,
@@ -40,7 +40,7 @@ class Mirror:
         
         # Internal
 
-        self._settings, settings_are_loaded = MirrorSettings.create(side)
+        self._settings, settings_are_loaded = MirrorSettings.create(type)
         
         if size:
             self.width = size[0]
@@ -164,7 +164,7 @@ class Mirror:
                 self.shader,
                 self.world is None,
                 settings.is_shader_control_by_mouse,
-                settings.is_circular_distortion)
+                settings.distortion_circle_radius)
             display = self._display_gl.screen
         else:
             display = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME)
@@ -201,7 +201,7 @@ class Mirror:
         camera_bp.set_attribute('fov', str(fov))
         
         for key in kwargs:
-            print(f'{key} = {kwargs[key]}')
+            print(f'CAM: {key} = {kwargs[key]}')
             camera_bp.set_attribute(key, kwargs[key])
         
         return cast(carla.Sensor, self.world.spawn_actor(

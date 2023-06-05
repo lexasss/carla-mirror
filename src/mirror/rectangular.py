@@ -3,7 +3,7 @@ from typing import Optional
 import pygame
 import carla
 
-from src.settings import Settings, Side
+from src.settings import Settings, MirrorType
 from src.offset import Offset
 from src.mirror.base import Mirror
 from src.mirror.wideview import WideviewMirror
@@ -12,14 +12,14 @@ from src.mirror.settings import MirrorSettings
 
 class RectanularMirror(Mirror):
     CAMERAS = {
-        'vehicle.lincoln.mkz_2017': Offset(0.7, 0.9, 1.1),
+        'vehicle.lincoln.mkz_2017': Offset(0.67, 0.9, 1.1),
         'vehicle.toyota.prius': Offset(0.7, 0.9, 1.1),
         'vehicle.audi.tt': Offset(0.4, 0.8, 1.1),
         'vehicle.mercedes.coupe_2020': Offset(0.55, 0.8, 1.1),
         'vehicle.dreyevr.egovehicle': Offset(0.68, 0.9, 1.1),
     }
     
-    CAMERA_YAW = 22
+    CAMERA_YAW_TOWARD_CAR = 2
     
     camera_offset = Offset()    # camera offset, controlled via set_camera_offset
     rear_view_camera_elevation = 0
@@ -34,7 +34,7 @@ class RectanularMirror(Mirror):
         shader = 'zoom_out' if settings.distort else None
         super().__init__([screen_size[0], screen_size[1]],
                          size = settings.size,
-                         side = settings.side.value,
+                         type = settings.type.value,
                          mask_name = None,
                          world = world,
                          shader = shader,
@@ -44,19 +44,19 @@ class RectanularMirror(Mirror):
 
         self._display = self._make_display(screen_size)
         if self._display_gl:
-            self._display_gl.inject_uniforms(reversed = settings.side == Side.RRIGHT)
+            self._display_gl.inject_uniforms(reversed = settings.type == MirrorType.RRIGHT)
 
         cam_x = RectanularMirror.camera_offset.forward
         cam_y = 0
         cam_z = RectanularMirror.camera_offset.up
         cam_rot = 180
-        if settings.side == Side.RLEFT:
+        if settings.type == MirrorType.RLEFT:
             cam_y = -RectanularMirror.camera_offset.left
-            cam_rot = 180 + RectanularMirror.CAMERA_YAW
-        elif settings.side == Side.RRIGHT:
+            cam_rot = 180 + (settings.fov / 2 - RectanularMirror.CAMERA_YAW_TOWARD_CAR)
+        elif settings.type == MirrorType.RRIGHT:
             cam_y = RectanularMirror.camera_offset.left
-            cam_rot = 180 - RectanularMirror.CAMERA_YAW
-        elif settings.side == Side.RREAR:
+            cam_rot = 180 - (settings.fov / 2 - RectanularMirror.CAMERA_YAW_TOWARD_CAR)
+        elif settings.type == MirrorType.RREAR:
             cam_x = WideviewMirror.CAMERA_X
             cam_z = RectanularMirror.rear_view_camera_elevation
             

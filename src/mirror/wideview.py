@@ -28,7 +28,7 @@ class WideviewMirror(Mirror):
         shader = 'zoom_in' if settings.distort else None
         super().__init__([960, 240],
                          size = settings.size,
-                         side = 'wideview',
+                         type = 'wideview',
                          mask_name = 'wideview_mirror',
                          world = world,
                          shader = shader) 

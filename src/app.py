@@ -19,7 +19,7 @@ except ImportError:
 import time
 
 from src.user_action import UserAction, ActionType, Action
-from src.settings import Settings, Side
+from src.settings import Settings, MirrorType
 from src.runner import Runner
 
 from src.carla.sync_mode import CarlaSyncMode
@@ -79,7 +79,7 @@ class App:
             mirror = self._create_mirror(settings, world, ego_car)
 
             if is_ego_car_created or settings.is_primary_mirror:
-                mirror_name = str(settings.side).split('.')[1].lower()
+                mirror_name = str(settings.type).split('.')[1].lower()
                 self._logger.log('mirror', mirror_name)
                 car_name = '_'.join(ego_car.type_id.split('.')[1:])
                 self._logger.log('car', car_name)
@@ -200,16 +200,16 @@ class App:
                 clock.tick(CarlaEnvironment.FPS)
 
     def _create_mirror(self, settings: Settings, world: Optional[carla.World] = None, ego_car: Optional[carla.Vehicle] = None) -> Mirror:
-        if settings.side == Side.WIDEVIEW:
+        if settings.type == MirrorType.WIDEVIEW:
             return WideviewMirror(settings, world, ego_car)
-        elif settings.side == Side.TOPVIEW:
+        elif settings.type == MirrorType.TOPVIEW:
             return TopViewMirror(settings, world, ego_car)
-        elif settings.side == Side.RLEFT or settings.side == Side.RRIGHT or settings.side == Side.RREAR:
+        elif settings.type == MirrorType.RLEFT or settings.type == MirrorType.RRIGHT or settings.type == MirrorType.RREAR:
             return RectanularMirror(settings, world, ego_car)
-        elif settings.side == Side.LEFT or settings.side == Side.RIGHT:
+        elif settings.type == MirrorType.LEFT or settings.type == MirrorType.RIGHT:
             return SideMirror(settings, world, ego_car)
         else:
-            print(f'APP Unknown mirror type: "{settings.side}"')
+            print(f'APP Unknown mirror type: "{settings.type}"')
             raise IndexError
 
     def _handle_action(self,

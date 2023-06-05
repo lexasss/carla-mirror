@@ -1,4 +1,4 @@
-from typing import Tuple, Set, Any
+from typing import Optional, Tuple, Set, Any
 from datetime import datetime
 
 import pygame
@@ -11,7 +11,7 @@ class OpenGLRenderer:
                  shader_name: str = '',
                  display_check_matrix: bool = False,
                  is_shader_control_by_mouse: bool = False,
-                 is_circular_distortion: bool = False):
+                 distortion_circle_radius: Optional[float] = None):
         screen = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.OPENGL | pygame.constants.NOFRAME ).convert((0xff, 0xff00, 0xff0000, 0))
         ctx = moderngl.create_context()
 
@@ -41,14 +41,13 @@ class OpenGLRenderer:
         self._screen_texture = screen_texture
 
         self._zoom = 1.4
-        self._convex_radius = 3.
+        self._convex_radius = distortion_circle_radius or -1.0
         self._timestamp = datetime.now().timestamp()
 
         self.screen = screen
         self.mouse = 0.0, 0.0
 
         self._is_shader_control_by_mouse = is_shader_control_by_mouse
-        self._is_circular_distortion = is_circular_distortion
         
         #self.ctx = ctx
 
@@ -78,7 +77,7 @@ class OpenGLRenderer:
             if ('u_zoom' in self._glsl_uniforms):
                 self._program['u_zoom'] = self._zoom
             if ('u_convex_radius' in self._glsl_uniforms):
-                self._program['u_convex_radius'] = self._convex_radius if self._is_circular_distortion else 0.0
+                self._program['u_convex_radius'] = self._convex_radius if self._convex_radius > 0.0 else 0.0
         
         self._screen_texture.write(texture_data)
         self._screen_texture.use()

@@ -24,7 +24,7 @@ class TopViewMirror(Mirror):
 
         super().__init__([480, 320],
                          size = settings.size,
-                         side = settings.side.value,
+                         type = settings.type.value,
                          mask_name = None,
                          world = world,
                          is_camera = True) 

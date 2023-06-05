@@ -9,7 +9,7 @@ from typing import Optional
 import pygame
 import carla
 
-from src.settings import Settings, Side
+from src.settings import Settings, MirrorType
 from src.offset import Offset
 from src.mirror.base import Mirror
 
@@ -35,20 +35,20 @@ class SideMirror(Mirror):
         shader = 'zoom_out' if settings.distort else None
         super().__init__([480, 320],
                          size = settings.size,
-                         side = settings.side.value,
-                         mask_name = f'{settings.side.value}_mirror',
+                         type = settings.type.value,
+                         mask_name = f'{settings.type.value}_mirror',
                          world = world,
                          shader = shader) 
                 
         if not self._settings.is_initialized():
             screen_size = pygame.display.get_desktop_sizes()[0]
-            self._window_pos = (0 if settings.side == Side.LEFT else screen_size[0] - self.width, screen_size[1] - self.height)
+            self._window_pos = (0 if settings.type == MirrorType.LEFT else screen_size[0] - self.width, screen_size[1] - self.height)
         
         self._display = self._make_display((self.width, self.height))
         if self._display_gl:
-            self._display_gl.inject_uniforms(reversed = settings.side == Side.RIGHT)
+            self._display_gl.inject_uniforms(reversed = settings.type == MirrorType.RIGHT)
         
-        cam_y, cam_rot = (-SideMirror.camera_offset.left, 180 + SideMirror.CAMERA_YAW) if settings.side == Side.LEFT else (SideMirror.camera_offset.left, 180 - SideMirror.CAMERA_YAW)
+        cam_y, cam_rot = (-SideMirror.camera_offset.left, 180 + SideMirror.CAMERA_YAW) if settings.type == MirrorType.LEFT else (SideMirror.camera_offset.left, 180 - SideMirror.CAMERA_YAW)
         transform = carla.Transform(
             carla.Location(x = SideMirror.camera_offset.forward, y = cam_y, z = SideMirror.camera_offset.up),
             carla.Rotation(yaw = cam_rot)

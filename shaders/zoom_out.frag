@@ -10,6 +10,7 @@ precision highp float;
         a. with linear + parabolic curvature
         b. with circular curvature
     2. colorizes the inspection matrix pixels
+
  This shader may run from ModernGL, but also from glslViewer.
  These environments instantiate the uniforms differently,
  this is why there are few if-else statements in this code
@@ -135,23 +136,21 @@ void main() {
     float zoom = u_zoom == 0. ? ZOOM : u_zoom;
     float radius = u_convex_radius < 1. ? CONVEX_RADIUS : u_convex_radius;
 
-    float threshold = u_mouse.x == 0.
-        ? (u_reversed ? 1. - THRESHOLD : THRESHOLD)
-        : 1. - u_mouse.x / u_resolution.x;
+    float threshold = u_mouse.x == 0. ?
+        (u_reversed ? 1. - THRESHOLD : THRESHOLD) :
+        1. - u_mouse.x / u_resolution.x;
 
     // Apply distortion
     if (threshold < 0. || threshold > 1. || zoom <= 0.) {
         // do nothing
     }
-    else if (u_reversed) {
-        uv.x = u_convex_radius != 0.
-            ? get_circluar(uv.x, radius)
-            : get_parabolic_right(uv.x, threshold, zoom);
-    }
     else {
-        uv.x = u_convex_radius != 0.
-            ? get_circluar(uv.x, radius)
-            : get_parabolic_left(uv.x, threshold, zoom);
+        uv.x = u_convex_radius != 0. ?
+            get_circluar(uv.x, radius) :
+            (u_reversed ?
+                get_parabolic_right(uv.x, threshold, zoom) :
+                get_parabolic_left(uv.x, threshold, zoom)
+            );
     }
 
     // Calculate the output color
