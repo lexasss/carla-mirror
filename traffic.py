@@ -22,7 +22,6 @@ class Settings:
     def __init__(self) -> None:
         args = self._make_args()
         
-        self.name = args.name
         self.is_manual_mode = args.manual == True
         
     def _make_args(self):

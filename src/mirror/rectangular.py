@@ -31,7 +31,7 @@ class RectanularMirror(Mirror):
 
         desktops = pygame.display.get_desktop_sizes()
         screen_size = desktops[settings.screen] if settings.screen < len(desktops) else desktops[0]
-        shader = 'unzoom_side' if settings.distort else None
+        shader = 'zoom_out' if settings.distort else None
         super().__init__([screen_size[0], screen_size[1]],
                          size = settings.size,
                          side = settings.side.value,

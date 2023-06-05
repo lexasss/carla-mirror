@@ -32,7 +32,7 @@ class SideMirror(Mirror):
                  world: Optional[carla.World] = None,
                  vehicle: Optional[carla.Vehicle] = None) -> None:
 
-        shader = 'unzoom_side' if settings.distort else None
+        shader = 'zoom_out' if settings.distort else None
         super().__init__([480, 320],
                          size = settings.size,
                          side = settings.side.value,
