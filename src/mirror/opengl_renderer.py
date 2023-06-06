@@ -102,4 +102,7 @@ class OpenGLRenderer:
                 self._program['u_resolution'] = size
             if ('u_colorize' in self._glsl_uniforms):
                 self._program['u_colorize'] = colorize
+                
+        if ('u_convex_radius' in self._glsl_uniforms):
+            self._program['u_convex_radius'] = self._convex_radius if self._convex_radius > 0.0 else 0.0
         

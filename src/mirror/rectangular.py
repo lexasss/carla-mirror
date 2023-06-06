@@ -6,7 +6,6 @@ import carla
 from src.settings import Settings, MirrorType
 from src.offset import Offset
 from src.mirror.base import Mirror
-from src.mirror.wideview import WideviewMirror
 from src.mirror.settings import MirrorSettings
 
 
@@ -18,6 +17,16 @@ class RectanularMirror(Mirror):
         'vehicle.mercedes.coupe_2020': Offset(0.55, 0.8, 1.1),
         'vehicle.dreyevr.egovehicle': Offset(0.68, 0.9, 1.1),
     }
+    
+    REAR_VIEW_CAMERAS_Z = {
+        'vehicle.lincoln.mkz_2017': 1.32,
+        'vehicle.toyota.prius': 1.3,
+        'vehicle.audi.tt': 1.3,
+        'vehicle.mercedes.coupe_2020': 1.3,
+        'vehicle.dreyevr.egovehicle': 1.3,
+    }
+
+    REAR_VIEW_CAMERA_X = 0.3              # offset forward
     
     CAMERA_YAW_TOWARD_CAR = 2
     
@@ -57,7 +66,7 @@ class RectanularMirror(Mirror):
             cam_y = RectanularMirror.camera_offset.left
             cam_rot = 180 - (settings.fov / 2 - RectanularMirror.CAMERA_YAW_TOWARD_CAR)
         elif settings.type == MirrorType.RREAR:
-            cam_x = WideviewMirror.CAMERA_X
+            cam_x = RectanularMirror.REAR_VIEW_CAMERA_X
             cam_z = RectanularMirror.rear_view_camera_elevation
             
         transform = carla.Transform(
@@ -92,7 +101,7 @@ class RectanularMirror(Mirror):
         else:
             print(f'MFS: The camera for {vehicle_type} is not defined')
 
-        if vehicle_type in WideviewMirror.CAMERAS_Z:
-            RectanularMirror.rear_view_camera_elevation = WideviewMirror.CAMERAS_Z[vehicle_type]
+        if vehicle_type in RectanularMirror.REAR_VIEW_CAMERAS_Z:
+            RectanularMirror.rear_view_camera_elevation = RectanularMirror.REAR_VIEW_CAMERAS_Z[vehicle_type]
         else:
             print(f'MFS: The camera for {vehicle_type} is not defined')

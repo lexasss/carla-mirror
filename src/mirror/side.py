@@ -23,7 +23,7 @@ class SideMirror(Mirror):
         'vehicle.dreyevr.egovehicle': Offset(0.7, 0.9, 1.1),
     }
     
-    CAMERA_YAW = 18
+    CAMERA_YAW_TOWARD_CAR = 2
     
     camera_offset = Offset(0.32, 0.10, 1.28)
     
@@ -48,7 +48,15 @@ class SideMirror(Mirror):
         if self._display_gl:
             self._display_gl.inject_uniforms(reversed = settings.type == MirrorType.RIGHT)
         
-        cam_y, cam_rot = (-SideMirror.camera_offset.left, 180 + SideMirror.CAMERA_YAW) if settings.type == MirrorType.LEFT else (SideMirror.camera_offset.left, 180 - SideMirror.CAMERA_YAW)
+        cam_y = 0
+        cam_rot = 180
+        if settings.type == MirrorType.LEFT:
+            cam_y = -SideMirror.camera_offset.left
+            cam_rot = 180 + (settings.fov / 2 - SideMirror.CAMERA_YAW_TOWARD_CAR)
+        else:
+            cam_y = SideMirror.camera_offset.left
+            cam_rot = 180 - (settings.fov / 2 + SideMirror.CAMERA_YAW_TOWARD_CAR)
+            
         transform = carla.Transform(
             carla.Location(x = SideMirror.camera_offset.forward, y = cam_y, z = SideMirror.camera_offset.up),
             carla.Rotation(yaw = cam_rot)
