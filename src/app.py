@@ -29,7 +29,7 @@ from src.carla.vehicle_factory import VehicleFactory
 from src.mirror.side import SideMirror
 from src.mirror.wideview import WideviewMirror
 from src.mirror.top_view import TopViewMirror
-from src.mirror.rectangular import RectanularMirror
+from src.mirror.rectangular import RectangularMirror
 from src.mirror.base import Mirror
 
 from src.exp.logging import EventLogger
@@ -51,7 +51,7 @@ class App:
         
         CarlaEnvironment.set_driver_offset(VehicleFactory.ego_car_type)
         SideMirror.set_camera_offset(VehicleFactory.ego_car_type)
-        RectanularMirror.set_camera_offset(VehicleFactory.ego_car_type)
+        RectangularMirror.set_camera_offset(VehicleFactory.ego_car_type)
         WideviewMirror.set_camera_offset(VehicleFactory.ego_car_type)
         
         pygame.init()
@@ -205,7 +205,7 @@ class App:
         elif settings.type == MirrorType.TOPVIEW:
             return TopViewMirror(settings, world, ego_car)
         elif settings.type == MirrorType.RLEFT or settings.type == MirrorType.RRIGHT or settings.type == MirrorType.RREAR:
-            return RectanularMirror(settings, world, ego_car)
+            return RectangularMirror(settings, world, ego_car)
         elif settings.type == MirrorType.LEFT or settings.type == MirrorType.RIGHT:
             return SideMirror(settings, world, ego_car)
         else:

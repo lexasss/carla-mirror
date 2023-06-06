@@ -7,7 +7,7 @@ from src.settings import Settings
 from src.mirror.base import Mirror
 
 class WideviewMirror(Mirror):
-    CAMERAS_Z = {
+    CAMERA_Z = {
         'vehicle.lincoln.mkz_2017': 1.8,
         'vehicle.toyota.prius': 1.5,
         'vehicle.audi.tt': 1.5,
@@ -48,7 +48,7 @@ class WideviewMirror(Mirror):
 
     @staticmethod
     def set_camera_offset(vehicle_type: str):
-        if vehicle_type in WideviewMirror.CAMERAS_Z:
-            WideviewMirror.camera_z = WideviewMirror.CAMERAS_Z[vehicle_type]
+        if vehicle_type in WideviewMirror.CAMERA_Z:
+            WideviewMirror.camera_z = WideviewMirror.CAMERA_Z[vehicle_type]
         else:
             print(f'MWV: The camera for {vehicle_type} is not defined')

@@ -15,7 +15,7 @@ from src.mirror.base import Mirror
 
 
 class SideMirror(Mirror):
-    CAMERAS = {
+    CAMERA = {
         'vehicle.lincoln.mkz_2017': Offset(0.7, 0.9, 1.1),
         'vehicle.toyota.prius': Offset(0.7, 0.9, 1.1),
         'vehicle.audi.tt': Offset(0.4, 0.8, 1.1),
@@ -65,8 +65,8 @@ class SideMirror(Mirror):
 
     @staticmethod
     def set_camera_offset(vehicle_type: str):
-        if vehicle_type in SideMirror.CAMERAS:
-            SideMirror.camera_offset = SideMirror.CAMERAS[vehicle_type]
+        if vehicle_type in SideMirror.CAMERA:
+            SideMirror.camera_offset = SideMirror.CAMERA[vehicle_type]
         else:
             print(f'MSD: The camera for {vehicle_type} is not defined')
 
