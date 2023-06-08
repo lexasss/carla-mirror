@@ -25,6 +25,7 @@ from src.runner import Runner
 from src.carla.sync_mode import CarlaSyncMode
 from src.carla.environment import CarlaEnvironment
 from src.carla.vehicle_factory import VehicleFactory
+from src.carla.monitor import CarlaMonitor
 
 from src.mirror.side import SideMirror
 from src.mirror.wideview import WideviewMirror
@@ -92,6 +93,8 @@ class App:
             if mirror.camera:
                 self._spawned_actors.append(mirror.camera)
                 
+            self._monitor = CarlaMonitor(world)
+            
             self._show_carla_mirror(mirror, runner)
 
         finally:
@@ -132,6 +135,8 @@ class App:
                         if queries:
                             snapshot, image = queries
                             mirror_image = cast(carla.Image, image)
+                            
+                            # self._print_image(mirror)
                         
                             if runner:
                                 carla_snapshot = cast(carla.WorldSnapshot, snapshot)
@@ -188,6 +193,9 @@ class App:
                         mirror.on_mouse(cast(str, action.param))
                     elif action.type == ActionType.MIRROR_VIEW_OFFSET:
                         mirror.on_offset(cast(str, action.param))
+                    elif action.type == ActionType.DEBUG_MIRROR:
+                        if action.param == 'snapshot':
+                            mirror.save_snapshot('debug')
                     elif action.type == ActionType.DEBUG_TASK_SCREEN:
                         if scenario:
                             scenario.report_action_result(action, False)
@@ -217,25 +225,30 @@ class App:
                        mirror: Mirror,
                        scenario: Optional[Scenario],
                        runner: Optional[Runner]) -> None:
-        if action:
-            if action.type == ActionType.QUIT:
-                raise Finished()
-            elif action.type == ActionType.START_SCENARIO:
-                if scenario:
-                    scenario.start()
-            elif action.type == ActionType.MOUSE:
-                mirror.on_mouse(cast(str, action.param))
-            elif action.type == ActionType.REMOVE_TARGETS:
-                targets = [ x for x in self._spawned_actors if x.type_id.startswith('static.prop.') ]
-                for target in targets:
-                    self._spawned_actors.remove(target)
-                    target.destroy()
-            elif action.type == ActionType.REMOVE_CARS:
-                ego_car = runner.ego_car if runner else None
-                vehicles = [ x for x in self._spawned_actors if x.type_id.startswith('vehicle.') and x != ego_car ]
-                for vehicle in vehicles:
-                    self._spawned_actors.remove(vehicle)
-                    vehicle.destroy()
+        if not action:
+            return
+        
+        if action.type == ActionType.QUIT:
+            raise Finished()
+        elif action.type == ActionType.START_SCENARIO:
+            if scenario:
+                scenario.start()
+        elif action.type == ActionType.MOUSE:
+            mirror.on_mouse(cast(str, action.param))
+        elif action.type == ActionType.REMOVE_TARGETS:
+            targets = [ x for x in self._spawned_actors if x.type_id.startswith('static.prop.') ]
+            for target in targets:
+                self._spawned_actors.remove(target)
+                target.destroy()
+        elif action.type == ActionType.REMOVE_CARS:
+            ego_car = runner.ego_car if runner else None
+            vehicles = [ x for x in self._spawned_actors if x.type_id.startswith('vehicle.') and x != ego_car ]
+            for vehicle in vehicles:
+                self._spawned_actors.remove(vehicle)
+                vehicle.destroy()
+        elif action.type == ActionType.DEBUG_MIRROR:
+            if action.param == 'snapshot':
+                self._print_image(mirror, True)
 
     def _update_scenario_state(self,
                                scenario: Scenario,
@@ -246,11 +259,10 @@ class App:
         else:
             scenario.set_search_target_distance(runner.controller.get_distance_to(ego_car_snapshot, runner.search_target))
         
-        vehicle, distance = runner.monitor.get_nearest_vehicle_behind(ego_car_snapshot)
-        if vehicle:
-            lane = runner.monitor.get_lane(ego_car_snapshot, vehicle)
-            if lane:
-                scenario.set_nearest_vehicle_behind(vehicle.type_id, distance, lane, runner.ego_car_speed)
+        vehicle, distance, lane = self._monitor.get_nearest_vehicle_behind(ego_car_snapshot)
+        if vehicle and lane:
+            if scenario.set_nearest_vehicle_behind(vehicle.type_id, distance, lane, runner.ego_car_speed):
+                runner.mirror.save_snapshot(f'{distance:.1f}')
         
     def _remove_spawned(self, sync_mode: CarlaSyncMode):
         actors = [x for x in self._spawned_actors if not x.type_id.startswith('sensor.')]
@@ -259,3 +271,22 @@ class App:
         for actor in actors:
             actor.destroy()
             sync_mode.tick(5.0)
+
+    def _print_image(self, mirror: Mirror, at_any_distance: bool = False):
+        if mirror.world:
+            ego_car = mirror.world.get_actors().filter(VehicleFactory.ego_car_type)[0]
+            snapshot = mirror.world.get_snapshot()
+            ego_car_snapshot = snapshot.find(ego_car.id)
+            _, distance, _ = self._monitor.get_nearest_vehicle_behind(ego_car_snapshot)
+            if at_any_distance:
+                if distance < 50:
+                    mirror.save_snapshot(f'{distance:.1f}')
+                    
+            # Uncomment and edit next lines to grab iages automatically under certain conditions
+            
+            # elif 15.0 < distance and distance < 15.3:
+            #     if lane == 'same':
+            #         mirror.save_snapshot(f'{distance:.1f}')
+            # elif mirror.type == 'rleft' and 40.0 < distance and distance < 40.2:
+            #     mirror.save_snapshot(f'{distance:.1f}')
+        

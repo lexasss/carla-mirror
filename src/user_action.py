@@ -30,7 +30,7 @@ class ActionType(IntEnum):
     TOGGLE_MIRROR_DIMMING = 34
     TOGGLE_SPECTATOR_AS_DRIVER = 35
     
-    DEBUG_TCP = 64
+    DEBUG_MIRROR = 64
     DEBUG_TASK_SCREEN = 65
 
 class CarSpawningLocation:
@@ -74,8 +74,6 @@ class UserAction:
         pygame.constants.K_F5: Action(ActionType.REMOVE_TARGETS),
         pygame.constants.K_F6: Action(ActionType.REMOVE_CARS),
         
-        pygame.constants.K_F9: Action(ActionType.DEBUG_TCP),
-        
         pygame.constants.K_1: Action(ActionType.SPAWN_TARGET, 'clothcontainer'),
         pygame.constants.K_2: Action(ActionType.SPAWN_TARGET, 'plastictable'),
         pygame.constants.K_3: Action(ActionType.SPAWN_TARGET, 'slide'),
@@ -99,12 +97,13 @@ class UserAction:
         pygame.constants.K_i: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', True)),
         pygame.constants.K_o: Action(ActionType.DEBUG_TASK_SCREEN, ('quest', False)),
         pygame.constants.K_p: Action(ActionType.DEBUG_TASK_SCREEN, ('message', 'Find something', DriverTask.TARGETS['clothcontainer'])),
+        pygame.constants.K_j: Action(ActionType.DEBUG_MIRROR, 'snapshot'),
         
         pygame.constants.K_a: Action(ActionType.TOGGLE_NIGHT),
         pygame.constants.K_s: Action(ActionType.TOGGLE_SPECTATOR_AS_DRIVER),
 
-        pygame.constants.K_n: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_next_lane, 30)),
-        pygame.constants.K_m: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_same_lane, 30)),
+        pygame.constants.K_n: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_next_lane, 35)),
+        pygame.constants.K_m: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.behind_same_lane, 35)),
         pygame.constants.K_COMMA: Action(ActionType.SPAWN_CAR, (CarSpawningLocation.random, 0)),
         pygame.constants.K_BACKSLASH: Action(ActionType.TOGGLE_MIRROR_DIMMING),
         pygame.constants.K_LEFT: Action(ActionType.LANE_LEFT),

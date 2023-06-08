@@ -121,10 +121,10 @@ float get_circluar(float x, float r) {
     float a = (1. - sqrt(2. * r * r - 1.)) / 2.;
     float b = 1. - a;   //(1. + sqrt(2. * r * r - 1.)) / 2.;
 
-    float dx = x - b;
-    return sqrt(r * r - dx * dx) + a;
+    float dx = u_reversed ? x - a : x - b;
+    float k = sqrt(r * r - dx * dx);
+    return u_reversed ? -k + b : k + a;
 }
-
 
 void main() {
     vec2 uv;

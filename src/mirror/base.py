@@ -2,10 +2,10 @@ from src.winapi import Window
 from src.settings import Settings
 from src.mirror.settings import MirrorSettings
 from src.mirror.opengl_renderer import OpenGLRenderer
+from src.exp.logging import ImageLogger
 
 from typing import Optional, Tuple, List, cast
 
-# import copy
 import pygame
 import carla
 import win32gui
@@ -36,6 +36,7 @@ class Mirror:
         self.enabled = True
         self.brightness = 1.0
         self.shader = shader
+        self.type = type
         self.is_camera = is_camera
         
         # Internal
@@ -86,6 +87,8 @@ class Mirror:
         self._settings.height = self.height
         MirrorSettings.save(self._settings)
         
+        self._image_logger = ImageLogger()
+        
     def draw_image(self, image: Optional[carla.Image]) -> None:
         self._update_dimming()
 
@@ -120,6 +123,13 @@ class Mirror:
         if self._display_gl:
             texture_data = self._display.get_view('1')
             self._display_gl.render(texture_data)
+            
+    def save_snapshot(self, attrib: str) -> None:
+        filename = self._image_logger.get_filename(attrib)
+        if self._display_gl:
+            pygame.image.save(self._display_gl.screen, filename)
+        else:
+            pygame.image.save(self._display, filename)
 
     def toggle_brightness(self):
         self.brightness = 1.0 + Mirror.MIN_BRIGHTNESS - self.brightness
@@ -164,7 +174,8 @@ class Mirror:
                 self.shader,
                 self.world is None,
                 settings.is_shader_control_by_mouse,
-                settings.distortion_circle_radius)
+                settings.distortion_circle_radius,
+                settings.type.value.endswith('right'))
             display = self._display_gl.screen
         else:
             display = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.NOFRAME)
@@ -225,7 +236,7 @@ class Mirror:
         
         return array
         
-        # make the array writeable doing a deep copy
+        # make the array writeable doing a deep copy, requires 'import copy'
         #return copy.deepcopy(array)
         
     def _update_dimming(self):

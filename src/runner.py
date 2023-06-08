@@ -10,7 +10,6 @@ from src.mirror.base import Mirror
 from src.carla.environment import CarlaEnvironment
 from src.carla.vehicle_factory import VehicleFactory
 from src.carla.controller import CarlaController
-from src.carla.monitor import CarlaMonitor
 
 from src.exp.logging import EventLogger
 
@@ -32,7 +31,6 @@ class Runner:
         self.world = self.vehicle_factory.world
         self.spectator = self.world.get_spectator()
         self.controller = CarlaController(self.world)
-        self.monitor = CarlaMonitor(self.world)
         
         self.search_target: Optional[carla.Actor] = None
         
@@ -181,7 +179,7 @@ class Runner:
 
         elif action.type == ActionType.TOGGLE_SPECTATOR_AS_DRIVER:
             self._spectator_is_driver = not self._spectator_is_driver
-
+            
         if spawned:
             evt = str(action.type).split('.')[1].split('_')[1].lower()
             name = '_'.join(spawned.type_id.split('.')[1:])

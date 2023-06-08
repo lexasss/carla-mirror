@@ -17,9 +17,11 @@ class Settings:
         args = make_args()
         
         self.size = [int(x) for x in args.res.split('x')]
-        self.screen: int = args.screen
         self.fov: int = args.fov
         self.pitch: Optional[float] = args.pitch
+        self.is_fullscreen = args.fullscreen == True
+
+        self.screen: int = args.screen
 
         self.distort: bool = args.distort == True
         self.distortion_circle_radius: Optional[float] = args.circle_radius
@@ -43,9 +45,9 @@ class Settings:
             self.type = MirrorType.LEFT
         
 def make_args():
-    #   w e         i o
+    #   w e     y   i o
     #         g   j k l
-    # z     v b n
+    # z x   v b
     argparser = argparse.ArgumentParser(
         description='CARLA mirror')
     
@@ -69,17 +71,23 @@ def make_args():
         type=int,
         help='FOV for camera (default: 65)')
     argparser.add_argument(
-        '-c',
-        '--screen',
-        default=0,
-        type=int,
-        help='Screen to use (default: 0)')
-    argparser.add_argument(
         '-p',
         '--pitch',
         default=None,
         type=float,
         help='Camera pitch (default: dependant on FOV)')
+    argparser.add_argument(
+        '-n',
+        '--fullscreen',
+        action='store_true',
+        help='Enables full-screen display for R-type mirrors. Then size means the size of the camera image')
+
+    argparser.add_argument(
+        '-c',
+        '--screen',
+        default=0,
+        type=int,
+        help='Screen to use (default: 0)')
     
     # Mirror distortion features
     argparser.add_argument(
@@ -92,7 +100,7 @@ def make_args():
         '--circle-radius',
         default=None,
         type=float,
-        help='Uses circular curvature instead of "linear + parabolic" with the radius specified here (default: None, i.e. non-circular curvature)')
+        help='Uses "circular" curvature instead of "linear + parabolic" with the radius specified here (default: None, i.e. non-circular curvature will be used)')
     argparser.add_argument(
         '-u',
         '--mouse',

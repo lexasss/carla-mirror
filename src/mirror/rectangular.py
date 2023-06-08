@@ -19,7 +19,7 @@ class RectangularMirror(Mirror):
     }
     
     REAR_VIEW_CAMERA_Z = {
-        'vehicle.lincoln.mkz_2017': 1.32,
+        'vehicle.lincoln.mkz_2017': 1.3,
         'vehicle.toyota.prius': 1.3,
         'vehicle.audi.tt': 1.3,
         'vehicle.mercedes.coupe_2020': 1.3,
@@ -49,9 +49,13 @@ class RectangularMirror(Mirror):
                          shader = shader,
                          screen = settings.screen) 
 
-        self._is_topmost = False
+        if settings.is_fullscreen or not settings.size:
+            self._is_topmost = False
+            display_size = screen_size
+        else:
+            display_size = (settings.size[0], settings.size[1])
 
-        self._display = self._make_display(screen_size)
+        self._display = self._make_display(display_size)
         if self._display_gl:
             self._display_gl.inject_uniforms(reversed = settings.type == MirrorType.RRIGHT)
 

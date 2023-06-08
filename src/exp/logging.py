@@ -4,7 +4,8 @@ from io import TextIOWrapper
 from typing import Optional, Any
 from datetime import datetime
 
-LOG_FOLDER = "logs"
+LOG_FOLDER = 'logs'
+IMAGE_FOLDER = "snapshots"
 
 class LogFile:
     def __init__(self) -> None:
@@ -18,7 +19,7 @@ class LogFile:
         
     def create(self, prefix: Optional[str] = None, suffix: Optional[str] = None) -> bool:
         if self._count == 0:
-            name = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
+            name = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
             if prefix is not None:
                 name = f'{prefix}_{name}'
             if suffix is not None:
@@ -103,3 +104,21 @@ class TrafficLogger(BaseLogger):
     
     def __init__(self) -> None:
         super().__init__(TrafficLogger.logfile)
+
+class ImageLogger:
+    def __init__(self) -> None:
+        folder = f'{LOG_FOLDER}/{IMAGE_FOLDER}'
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+            
+        ts = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
+        self._folder = f'{folder}/{ts}'
+        os.makedirs(self._folder)
+            
+    def __del__(self):
+        if not os.listdir(self._folder):
+            os.rmdir(self._folder)
+            
+    def get_filename(self, attrib: str) -> str:
+        ts = datetime.utcnow().strftime('%H-%M-%S')
+        return f'{self._folder}/ss-{ts}-{attrib}.jpg'

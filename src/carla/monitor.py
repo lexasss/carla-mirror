@@ -13,12 +13,13 @@ class CarlaMonitor:
         self.map = self.world.get_map()
         self.traffic_state = TrafficState()
         
-    def get_nearest_vehicle_behind(self, ego_car_snapshot: carla.ActorSnapshot) -> Tuple[Optional[carla.Vehicle], float]:
+    def get_nearest_vehicle_behind(self, ego_car_snapshot: carla.ActorSnapshot) -> Tuple[Optional[carla.Vehicle], float, Optional[str]]:
         actors = self.world.get_actors().filter('vehicle.*')
         vehicles = cast(List[carla.Vehicle], actors)
         
         min_distance = sys.float_info.max
         car: Optional[carla.Vehicle] = None
+        lane: Optional[str] = None
 
         self.traffic_state.reset()
 
@@ -28,14 +29,15 @@ class CarlaMonitor:
             
             is_approaching_from_behind, distance = CarlaMonitor._is_approaching_from_behind(transform, velocity, ego_car_snapshot)
             if is_approaching_from_behind:
-                self.traffic_state.update(distance, self.get_lane(ego_car_snapshot, vehicle))
+                lane = self.get_lane(ego_car_snapshot, vehicle)
+                self.traffic_state.update(distance, lane)
                 if distance < min_distance:
                     min_distance = distance
                     car = vehicle
 
         self.traffic_state.log()
 
-        return car, min_distance
+        return car, min_distance, lane
     
     def get_lane(self, ego_car_snapshot: carla.ActorSnapshot, other_car: carla.Vehicle) -> Optional[str]:
         
@@ -77,7 +79,7 @@ class CarlaMonitor:
         if distance and abs(dist - distance) > 0.5:
             return False, 0
         
-        # other vehicle should move about the same direction as the ego car, plus-minus 15 degrees
+        # other vehicle should move about the same direction as the ego car, plus-minus 25 degrees
         r1 = transform.rotation
         r2 = ego_car_transform.rotation
         if abs(r1.yaw - r2.yaw) > 25:

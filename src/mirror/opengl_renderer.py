@@ -11,7 +11,8 @@ class OpenGLRenderer:
                  shader_name: str = '',
                  display_check_matrix: bool = False,
                  is_shader_control_by_mouse: bool = False,
-                 distortion_circle_radius: Optional[float] = None):
+                 distortion_circle_radius: Optional[float] = None,
+                 is_reversed: bool = False):
         screen = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.OPENGL | pygame.constants.NOFRAME ).convert((0xff, 0xff00, 0xff0000, 0))
         ctx = moderngl.create_context()
 
@@ -52,7 +53,7 @@ class OpenGLRenderer:
         #self.ctx = ctx
 
         self._glsl_uniforms: Set[str] = set()
-        self._inject_uniforms(size, display_check_matrix)
+        self._inject_uniforms(size, display_check_matrix, is_reversed)
         
     def inject_uniforms(self, **kwargs: Any) -> None:
         for u in kwargs:
@@ -87,7 +88,8 @@ class OpenGLRenderer:
 
     def _inject_uniforms(self,
                        size: Tuple[int,int],
-                       colorize: bool) -> None:
+                       colorize: bool,
+                       is_reversed: bool) -> None:
         # only for debugging
         for name in self._program:
             member = self._program[name]
@@ -105,4 +107,6 @@ class OpenGLRenderer:
                 
         if ('u_convex_radius' in self._glsl_uniforms):
             self._program['u_convex_radius'] = self._convex_radius if self._convex_radius > 0.0 else 0.0
+        if ('u_reversed' in self._glsl_uniforms):
+            self._program['u_reversed'] = is_reversed
         
