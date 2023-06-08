@@ -1,0 +1,52 @@
+{
+  "0x3065ecc8123a": {
+    "left": {
+      "x": 5,
+      "y": 586,
+      "width": 480,
+      "height": 320,
+      "offset_x": 0,
+      "offset_y": 0
+    },
+    "right": {
+      "x": 1440,
+      "y": 760,
+      "width": 480,
+      "height": 320,
+      "offset_x": 0,
+      "offset_y": 0
+    },
+    "wideview": {
+      "x": 480,
+      "y": 0,
+      "width": 960,
+      "height": 240,
+      "offset_x": 0,
+      "offset_y": 0
+    },
+    "rleft": {
+      "x": 2720,
+      "y": 0,
+      "width": 768,
+      "height": 460,
+      "offset_x": 16,
+      "offset_y": 70
+    },
+    "rrear": {
+      "x": 900,
+      "y": 0,
+      "width": 720,
+      "height": 200,
+      "offset_x": 40,
+      "offset_y": 400
+    },
+    "rright": {
+      "x": 1920,
+      "y": 0,
+      "width": 768,
+      "height": 460,
+      "offset_x": 16,
+      "offset_y": 70
+    }
+  }
+}

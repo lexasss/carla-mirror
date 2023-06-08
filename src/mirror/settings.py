@@ -2,6 +2,7 @@ import os
 import copy
 import jsonpickle
 import json
+import uuid
 
 from typing import Optional, Tuple, List, Any
 
@@ -29,10 +30,12 @@ class MirrorSettings:
     @staticmethod
     def create(section: str) -> Tuple['MirrorSettings', bool]:
         filename = os.path.join(FILENAME)
+        mac = hex(uuid.getnode())
         try:
             with open(filename, mode='r') as f:
                 json_data: Any = jsonpickle.decode(f.read())
-                section_data = json_data[section]
+                local_data = json_data[mac]
+                section_data = local_data[section]
                 return MirrorSettings(section, **section_data), True
                 
         except:
@@ -41,6 +44,7 @@ class MirrorSettings:
     @staticmethod
     def save(settings: 'MirrorSettings'):
         filename = os.path.join(FILENAME)
+        mac = hex(uuid.getnode())
         json_data = None
         
         try:
@@ -54,18 +58,24 @@ class MirrorSettings:
         if json_data is None:
             json_data = json.loads('{}')
         
+        if mac in json_data:
+            local_data = json_data[mac]
+        else:
+            local_data = json.loads('{}')
+        
         try:
-            json_data[settings._section] = copy.deepcopy(settings)
+            local_data[settings._section] = copy.deepcopy(settings)
             
             keys: List[str] = []
-            for key in json_data[settings._section].__dict__:
+            for key in local_data[settings._section].__dict__:
                 keys.append(key)
 
             for key in keys:
                 if key[0] == '_':
-                    del json_data[settings._section].__dict__[key]
+                    del local_data[settings._section].__dict__[key]
             
-            json_data: Any = jsonpickle.encode(json_data, unpicklable=False)
+            json_data[mac] = local_data
+            json_data: Any = jsonpickle.encode(json_data, unpicklable = False, indent = 2)
             
             with open(filename, mode='w') as f:
                 f.write(json_data)

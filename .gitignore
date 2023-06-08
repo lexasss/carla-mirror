@@ -161,6 +161,5 @@ cython_debug/
 
 # Custom
 .vscode
-mirror_settings.json
 *.xlsx
 logs/**
