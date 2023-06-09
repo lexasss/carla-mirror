@@ -28,6 +28,7 @@ class RectangularMirror(Mirror):
 
     REAR_VIEW_CAMERA_X = 0.3              # offset forward
     
+    # CAMERA_PITCH_K = -20        # value of fov per one degree downward: for example, if fov=120 and CAMERA_PITCH_K=-20, then the camera pitch is 120/-20 = -6
     CAMERA_YAW_TOWARD_CAR = 2
     
     camera_offset = Offset()    # camera offset, controlled via set_camera_offset
@@ -40,10 +41,17 @@ class RectangularMirror(Mirror):
 
         desktops = pygame.display.get_desktop_sizes()
         screen_size = desktops[settings.screen] if settings.screen < len(desktops) else desktops[0]
-        shader = 'zoom_out' if settings.distort else None
-        super().__init__([screen_size[0], screen_size[1]],
-                         size = settings.size,
-                         type = settings.type.value,
+        
+        if settings.distortion is not None:
+            shader = 'zoom_out'
+        else:
+            shader = None
+            
+        super().__init__(settings.type.value,
+                         [screen_size[0], screen_size[1]],
+                         settings.size,
+                         settings.location,
+                         settings.offset,
                          mask_name = None,
                          world = world,
                          shader = shader,
@@ -73,6 +81,7 @@ class RectangularMirror(Mirror):
             cam_x = RectangularMirror.REAR_VIEW_CAMERA_X
             cam_z = RectangularMirror.rear_view_camera_elevation
             
+        # pitch = settings.pitch if settings.pitch is not None else settings.fov / RectangularMirror.CAMERA_PITCH_K
         transform = carla.Transform(
             carla.Location(cam_x, cam_y, cam_z),
             carla.Rotation(yaw = cam_rot)

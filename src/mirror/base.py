@@ -23,14 +23,16 @@ class Mirror:
     BLANK_COLOR = (255, 255, 255)
 
     def __init__(self,
+                 type: str,
                  default_size: List[int],
                  size: Optional[List[int]],
-                 type: str,
+                 location: Optional[List[int]],
+                 offset: Optional[List[int]] = None,
                  mask_name: Optional[str] = None,
                  world: Optional[carla.World] = None,
                  shader: Optional[str] = None,
-                 is_camera: bool = False,
-                 screen: Optional[int] = None) -> None:
+                 screen: Optional[int] = None,
+                 is_camera: bool = False) -> None:
         self.world = world
         
         self.enabled = True
@@ -68,7 +70,11 @@ class Mirror:
         self._is_mouse_down: bool = False
         self._mouse_pos: Tuple[int, int] = (0, 0)
         
-        pos = self._settings.x, self._settings.y
+        if offset:
+            self._settings.offset_x = offset[0]
+            self._settings.offset_y = offset[1]
+        
+        pos = (location[0], location[1]) if location else (self._settings.x, self._settings.y)
         if screen is not None and not settings_are_loaded:
             monitors = win32api.EnumDisplayMonitors()
             if len(monitors) > screen:
@@ -173,8 +179,8 @@ class Mirror:
                 size,
                 self.shader,
                 self.world is None,
+                settings.distortion,
                 settings.is_shader_control_by_mouse,
-                settings.distortion_circle_radius,
                 settings.type.value.endswith('right'))
             display = self._display_gl.screen
         else:

@@ -22,9 +22,10 @@ class TopViewMirror(Mirror):
                  world: Optional[carla.World] = None,
                  vehicle: Optional[carla.Vehicle] = None) -> None:
 
-        super().__init__([480, 320],
-                         size = settings.size,
-                         type = settings.type.value,
+        super().__init__(settings.type.value,
+                         [480, 320],
+                         settings.size,
+                         settings.location,
                          mask_name = None,
                          world = world,
                          is_camera = True) 

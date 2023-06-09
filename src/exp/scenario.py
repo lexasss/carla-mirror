@@ -15,9 +15,9 @@ from src.exp.scoring import Scoring
 
 from src.net.tcp_server import TcpServer
 
-REPETITIONS = 2
-DISTANCES = [5, 15, 25]
-SPAWN_VEHICLE_BEHIND = 30 # meters
+REPETITIONS = 6
+DISTANCES = [5, 25, 40]
+SPAWN_VEHICLE_BEHIND = 35 # meters
 SPAWN_LOCATIONS = [
     CarSpawningLocation.behind_next_lane,
     CarSpawningLocation.behind_same_lane,

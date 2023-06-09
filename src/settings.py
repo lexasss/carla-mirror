@@ -20,11 +20,12 @@ class Settings:
         self.fov: int = args.fov
         self.pitch: Optional[float] = args.pitch
         self.is_fullscreen = args.fullscreen == True
+        self.location = [int(x) for x in args.location.split(',')] if args.location else None
+        self.offset = [int(x) for x in args.offset.split(',')] if args.offset else None
 
-        self.screen: int = args.screen
+        self.screen: int = args.display
 
-        self.distort: bool = args.distort == True
-        self.distortion_circle_radius: Optional[float] = args.circle_radius
+        self.distortion: Optional[float] = args.distortion
         self.is_shader_control_by_mouse = args.mouse == True
 
         self.is_primary_mirror = args.adopt_egocar == True
@@ -45,9 +46,9 @@ class Settings:
             self.type = MirrorType.LEFT
         
 def make_args():
-    #   w e     y   i o
-    #         g   j k l
-    # z x   v b
+    # _ w e _ _ y _ i _ _
+    # _ s _ _ g _ j k _
+    # z x c v b n _
     argparser = argparse.ArgumentParser(
         description='CARLA mirror')
     
@@ -63,7 +64,7 @@ def make_args():
         '--res',
         metavar='WIDTHxHEIGHT',
         default='0x0',
-        help='window resolution (default: defined for each mirror separately)')
+        help='Mirror camera resolution (default: defined for each mirror separately)')
     argparser.add_argument(
         '-f',
         '--fov',
@@ -77,35 +78,46 @@ def make_args():
         type=float,
         help='Camera pitch (default: dependant on FOV)')
     argparser.add_argument(
-        '-n',
-        '--fullscreen',
-        action='store_true',
-        help='Enables full-screen display for R-type mirrors. Then size means the size of the camera image')
-
+        '-l',
+        '--location',
+        metavar='X,Y',
+        default=None,
+        help='Mirror X,Y location. If not specified, then either a default location is used, or the location used previously')
+    argparser.add_argument(
+        '-o',
+        '--offset',
+        metavar='X,Y',
+        default=None,
+        help='Mirror X,Y offset for R-type mirrors. If not specified, then either a default offset is used (0,0), or the offset used previously')
     argparser.add_argument(
         '-c',
-        '--screen',
+        '--fullscreen',
+        action='store_true',
+        help='Enables full-screen view for R-type mirrors. Then size means the size of the camera image')
+
+    argparser.add_argument(
+        '-d',
+        '--display',
         default=0,
         type=int,
         help='Screen to use (default: 0)')
     
     # Mirror distortion features
     argparser.add_argument(
-        '-d',
-        '--distort',
-        action='store_true',
-        help='Distort the mirror view. Default distortion is "linear + parabolic"')
-    argparser.add_argument(
         '-q',
-        '--circle-radius',
+        '--distortion',
         default=None,
+        const=0.0,
+        nargs='?',
         type=float,
-        help='Uses "circular" curvature instead of "linear + parabolic" with the radius specified here (default: None, i.e. non-circular curvature will be used)')
+        help='Distort the mirror view. Default distortion of R-type mirrors is "linear + parabolic", \
+            but if this parameter is provided with a value, then R-type mirrors use "circular" disrtortion \
+            with the parameter value used as radius (default: no distortion)')
     argparser.add_argument(
         '-u',
         '--mouse',
         action='store_true',
-        help='Enables shader control by mouse. Allows manipulating zoom rate (all shaders) and distortion change point (for "linear + parabolic" only)')
+        help='Enables shader control by mouse. Allows manipulating zoom rate with mouse-scroll (all shaders) and distortion change point with mouse movements (for "linear + parabolic" only)')
     
     # Driving features
     argparser.add_argument(

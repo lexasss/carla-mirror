@@ -25,13 +25,14 @@ class WideviewMirror(Mirror):
                  world: Optional[carla.World] = None,
                  vehicle: Optional[carla.Vehicle] = None) -> None:
 
-        shader = 'zoom_in' if settings.distort else None
-        super().__init__([960, 240],
-                         size = settings.size,
-                         type = 'wideview',
+        shader = 'zoom_in' if settings.distortion is not None else None
+        super().__init__('wideview',
+                         [960, 240],
+                         settings.size,
+                         settings.location,
                          mask_name = 'wideview_mirror',
                          world = world,
-                         shader = shader) 
+                         shader = shader)
 
         if not self._settings.is_initialized():
             screen_size = pygame.display.get_desktop_sizes()[0]

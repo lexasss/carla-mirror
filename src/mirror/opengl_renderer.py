@@ -10,8 +10,8 @@ class OpenGLRenderer:
                  size: Tuple[int,int],
                  shader_name: str = '',
                  display_check_matrix: bool = False,
+                 distortion: Optional[float] = None,
                  is_shader_control_by_mouse: bool = False,
-                 distortion_circle_radius: Optional[float] = None,
                  is_reversed: bool = False):
         screen = pygame.display.set_mode(size, pygame.constants.DOUBLEBUF | pygame.constants.OPENGL | pygame.constants.NOFRAME ).convert((0xff, 0xff00, 0xff0000, 0))
         ctx = moderngl.create_context()
@@ -42,7 +42,7 @@ class OpenGLRenderer:
         self._screen_texture = screen_texture
 
         self._zoom = 1.4
-        self._convex_radius = distortion_circle_radius or -1.0
+        self._convex_radius = distortion or -1.0
         self._timestamp = datetime.now().timestamp()
 
         self.screen = screen
