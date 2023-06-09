@@ -122,13 +122,13 @@ class VehicleFactory:
     def configure_traffic_vehicle(self,
                                   vehicle: carla.Vehicle) -> None:
         if self.traffic_manager:
-            self.traffic_manager.vehicle_percentage_speed_difference(vehicle, -20)
+            self.traffic_manager.vehicle_percentage_speed_difference(vehicle, -25)
             self.traffic_manager.ignore_lights_percentage(vehicle, 100)
             self.traffic_manager.ignore_signs_percentage(vehicle, 100)
             # self.traffic_manager.distance_to_leading_vehicle(vehicle, 10)
             # self.traffic_manager.random_left_lanechange_percentage(vehicle, 20)
             # self.traffic_manager.random_right_lanechange_percentage(vehicle, 20)
-   
+
     def configure_ego_car(self,
                    vehicle: carla.Vehicle) -> None:
         if self.traffic_manager:

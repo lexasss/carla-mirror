@@ -262,7 +262,7 @@ class App:
         vehicle, distance, lane = self._monitor.get_nearest_vehicle_behind(ego_car_snapshot)
         if vehicle and lane:
             if scenario.set_nearest_vehicle_behind(vehicle.type_id, distance, lane, runner.ego_car_speed):
-                runner.mirror.save_snapshot(f'{distance:.1f}')
+                runner.mirror.save_snapshot(f'{lane}_{distance:.0f}')
         
     def _remove_spawned(self, sync_mode: CarlaSyncMode):
         actors = [x for x in self._spawned_actors if not x.type_id.startswith('sensor.')]

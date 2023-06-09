@@ -57,7 +57,7 @@ class DriverTask:
         'travelcase': 'TRAVEL CASE',
         'trafficcone01': 'TRAFFIC CONE',
         # 'kiosk_01': 'KIOSK',
-        'fountain': 'FOUNTAIN',
+        # 'fountain': 'FOUNTAIN',
         # 'advertisement': 'ADVERTISEMENT',
         # 'mailbox': 'MAILBOX',
         'vendingmachine': 'VENDING MACHINE'
