@@ -19,7 +19,8 @@ class CarlaController:
     def __init__(self, world: carla.World) -> None:
         self.world = world
         self.debug = world.debug
-        
+
+        self._map = self.world.get_map()        
         self._info: Optional[str] = None
     
     # Info display
@@ -67,17 +68,17 @@ class CarlaController:
                       ego_car_snapshot: carla.ActorSnapshot,
                       vehicle_factory: VehicleFactory) -> Optional[carla.Actor]:
         ego_car_tranform = ego_car_snapshot.get_transform()
-        ego_car_waypoint = self.world.get_map().get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
+        ego_car_waypoint = self._map.get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
         if ego_car_waypoint is None:
             return None
 
-        spawn_points = self.world.get_map().get_spawn_points()
+        spawn_points = self._map.get_spawn_points()
         random.shuffle(spawn_points)
         
         vehicle: Optional[carla.Actor] = None
         while vehicle is None:
             vehicle_transform = random.choice(spawn_points)
-            vehicle_waypoint = self.world.get_map().get_waypoint(vehicle_transform.location, True, carla.LaneType.Driving)
+            vehicle_waypoint = self._map.get_waypoint(vehicle_transform.location, True, carla.LaneType.Driving)
             if vehicle_waypoint is None or abs(ego_car_waypoint.lane_id) == abs(vehicle_waypoint.lane_id):
                 continue
             
@@ -92,13 +93,11 @@ class CarlaController:
                              vehicle_factory: VehicleFactory,
                              distance: float,
                              same_lane: bool = False) -> Optional[carla.Actor]:
-        map = self.world.get_map()
-        
         ego_car_tranform = ego_car_snapshot.get_transform()
-        ego_car_waypoint = map.get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
+        ego_car_waypoint = self._map.get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
         
         vehicle_location = CarlaEnvironment.get_location_relative_to_driver(ego_car_snapshot, -distance)
-        vehicle_waypoint = map.get_waypoint(vehicle_location, True, carla.LaneType.Driving)
+        vehicle_waypoint = self._map.get_waypoint(vehicle_location, True, carla.LaneType.Driving)
 
         if ego_car_waypoint is None or vehicle_waypoint is None:
             print('CCR: No waypoint to spawn the car')
@@ -117,7 +116,7 @@ class CarlaController:
         
         vehicle_location = CarlaEnvironment.get_location_relative_to_point(vehicle_waypoint.transform, left = side_offset)
         vehicle_location.z += 0.2
-        new_vehicle_waypoint = self.world.get_map().get_waypoint(vehicle_location, True, carla.LaneType.Driving)
+        new_vehicle_waypoint = self._map.get_waypoint(vehicle_location, True, carla.LaneType.Driving)
 
         if new_vehicle_waypoint is None:
             print('CCR: No new waypoint')
@@ -144,7 +143,7 @@ class CarlaController:
         while result is None and max_attempts > 0:
             try:
                 location = self.world.get_random_location_from_navigation()
-                waypoint = self.world.get_map().get_waypoint(
+                waypoint = self._map.get_waypoint(
                     location,
                     project_to_road = True,
                     lane_type = carla.LaneType.Sidewalk)
@@ -162,7 +161,7 @@ class CarlaController:
         return result
     
     def spawn_prop_nearby(self, name: str, ego_car_snapshot: carla.ActorSnapshot) -> Optional[carla.Actor]:
-        waypoint = self.world.get_map().get_waypoint(
+        waypoint = self._map.get_waypoint(
             ego_car_snapshot.get_transform().location,
             project_to_road = True,
             lane_type = carla.LaneType.Sidewalk)
@@ -182,23 +181,23 @@ class CarlaController:
     
     def print_spawn_points(self) -> None:
         output = open('logs/spawns.txt', 'w')
-        output.writelines([f'{p.location.x}\t{p.location.y}\n' for p in self.world.get_map().get_spawn_points()])
+        output.writelines([f'{p.location.x}\t{p.location.y}\n' for p in self._map.get_spawn_points()])
     def print_landmarks(self) -> None:
         output = open('logs/landmarks.txt', 'w')
-        output.writelines([f'{p.transform.location.x}\t{p.transform.location.y}\n' for p in self.world.get_map().get_all_landmarks()])
+        output.writelines([f'{p.transform.location.x}\t{p.transform.location.y}\n' for p in self._map.get_all_landmarks()])
     def print_lights(self) -> None:
         output = open('logs/lights.txt', 'w')
         output.writelines([f'{p.location.x}\t{p.location.y}\n' for p in self.world.get_lightmanager().get_all_lights()])
     def print_map_topology(self) -> None:
         output = open('logs/topology.txt', 'w')
-        output.writelines([f'{p[0].transform.location.x}\t{p[0].transform.location.y}\n' for p in self.world.get_map().get_topology()])
+        output.writelines([f'{p[0].transform.location.x}\t{p[0].transform.location.y}\n' for p in self._map.get_topology()])
     def print_waypoints(self) -> None:
         output = open('logs/waypoints.txt', 'w')
-        output.writelines([f'{p.transform.location.x}\t{p.transform.location.y}\n' for p in self.world.get_map().generate_waypoints(5)])
+        output.writelines([f'{p.transform.location.x}\t{p.transform.location.y}\n' for p in self._map.generate_waypoints(5)])
     def print_closest_waypoint(self, object: Optional[carla.ActorSnapshot]) -> None:
         if object:
             output = open('logs/custom.txt', 'a')
-            waypoint = self.world.get_map().get_waypoint(
+            waypoint = self._map.get_waypoint(
                 object.get_transform().location,
                 project_to_road=True,
                 lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder)

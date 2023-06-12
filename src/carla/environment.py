@@ -1,10 +1,10 @@
 import math
-import random
+# import random
 import carla
 
 from typing import Callable, Optional
 
-from src.carla.vehicle_factory import VehicleFactory
+# from src.carla.vehicle_factory import VehicleFactory
 
 from src.offset import Offset
 
@@ -93,33 +93,35 @@ class CarlaEnvironment:
 
         return world
 
-    def create_traffic(self,
-                       vehicle_factory: VehicleFactory,
-                       max_count: int) -> None:
-        world = self.client.get_world()
-        spawn_points = world.get_map().get_spawn_points()
-        random.shuffle(spawn_points)
+    # Unused, but may be useful in future
+    
+    # def create_traffic(self,
+    #                    vehicle_factory: VehicleFactory,
+    #                    max_count: int) -> None:
+    #     world = self.client.get_world()
+    #     spawn_points = world.get_map().get_spawn_points()
+    #     random.shuffle(spawn_points)
         
-        vehicles = world.get_actors().filter('vehicle.*')
-        if len(vehicles) >= (max_count + 1):
-            return
+    #     vehicles = world.get_actors().filter('vehicle.*')
+    #     if len(vehicles) >= (max_count + 1):
+    #         return
         
-        for n, transform in enumerate(spawn_points):
-            if n == max_count:
-                break
-            other_car = vehicle_factory.make_vehicle(False, transform)
-            if other_car:
-                vehicle_factory.configure_traffic_vehicle(other_car)
-                print(f'CEV: spawned {other_car.type_id} [#{n+1}]')
+    #     for n, transform in enumerate(spawn_points):
+    #         if n == max_count:
+    #             break
+    #         other_car = vehicle_factory.make_vehicle(False, transform)
+    #         if other_car:
+    #             vehicle_factory.configure_traffic_vehicle(other_car)
+    #             print(f'CEV: spawned {other_car.type_id} [#{n+1}]')
                 
-    def add_traffic(self,
-                    vehicle_factory: VehicleFactory,
-                    max_count: int) -> None:
-        world = self.client.get_world()
-        if random.random() < 0.05:
-            vehicles: list[carla.Actor] = world.get_actors().filter('vehicle.*')
-            if len(vehicles) < (max_count + 1):
-                other_car = vehicle_factory.make_vehicle(False)
-                if other_car:
-                    vehicle_factory.configure_traffic_vehicle(other_car)
-                    print(f'CEV: spawned {other_car.type_id} [#{len(vehicles)}]')
+    # def add_traffic(self,
+    #                 vehicle_factory: VehicleFactory,
+    #                 max_count: int) -> None:
+    #     world = self.client.get_world()
+    #     if random.random() < 0.05:
+    #         vehicles: list[carla.Actor] = world.get_actors().filter('vehicle.*')
+    #         if len(vehicles) < (max_count + 1):
+    #             other_car = vehicle_factory.make_vehicle(False)
+    #             if other_car:
+    #                 vehicle_factory.configure_traffic_vehicle(other_car)
+    #                 print(f'CEV: spawned {other_car.type_id} [#{len(vehicles)}]')

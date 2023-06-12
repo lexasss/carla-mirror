@@ -9,19 +9,20 @@ from src.carla.lane import Lane
 
 class CarlaMonitor:
     def __init__(self, world: carla.World) -> None:
-        self.world = world
-        self.map = self.world.get_map()
-        self.traffic_state = TrafficState()
+        self._world = world
+        self._map = self._world.get_map()
+        self._traffic_state = TrafficState()
         
     def get_nearest_vehicle_behind(self, ego_car_snapshot: carla.ActorSnapshot) -> Tuple[Optional[carla.Vehicle], float, Optional[str]]:
-        actors = self.world.get_actors().filter('vehicle.*')
+        actors = self._world.get_actors().filter('vehicle.*')
         vehicles = cast(List[carla.Vehicle], actors)
         
         min_distance = sys.float_info.max
         car: Optional[carla.Vehicle] = None
         lane: Optional[str] = None
 
-        self.traffic_state.reset()
+        self._traffic_state.reset()
+        self._traffic_state.ego_car_lane_props = self._get_lane_props(ego_car_snapshot)
 
         for vehicle in vehicles:
             transform = vehicle.get_transform()
@@ -30,22 +31,22 @@ class CarlaMonitor:
             is_approaching_from_behind, distance = CarlaMonitor._is_approaching_from_behind(transform, velocity, ego_car_snapshot)
             if is_approaching_from_behind:
                 lane = self.get_lane(ego_car_snapshot, vehicle)
-                self.traffic_state.update(distance, lane)
+                self._traffic_state.update(distance, lane)
                 if distance < min_distance:
                     min_distance = distance
                     car = vehicle
 
-        self.traffic_state.log()
+        self._traffic_state.log()
 
         return car, min_distance, lane
     
     def get_lane(self, ego_car_snapshot: carla.ActorSnapshot, other_car: carla.Vehicle) -> Optional[str]:
         
         ego_car_tranform = ego_car_snapshot.get_transform()
-        ego_car_waypoint = self.map.get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
+        ego_car_waypoint = self._map.get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
         
         vehicle_tranform = other_car.get_transform()
-        vehicle_waypoint = self.map.get_waypoint(vehicle_tranform.location, True, carla.LaneType.Driving)
+        vehicle_waypoint = self._map.get_waypoint(vehicle_tranform.location, True, carla.LaneType.Driving)
         
         if ego_car_waypoint is None or vehicle_waypoint is None:
             return None
@@ -110,3 +111,22 @@ class CarlaMonitor:
         
         return True, dist
     
+    def _get_lane_props(self, ego_car_snapshot: carla.ActorSnapshot) -> Optional[Tuple[float, float]]:
+        ego_car_location = ego_car_snapshot.get_transform().location
+        wp = self._map.get_waypoint(ego_car_location, True, carla.LaneType.Driving)
+        if wp:
+            wps = wp.next(1)
+            if len(wps) > 0:
+                wp_next = wps[0]
+                x0 = wp.transform.location.x
+                y0 = wp.transform.location.y
+                dx = wp_next.transform.location.x - x0
+                dy = wp_next.transform.location.y - y0
+                a = dy
+                b = -dx
+                c = -x0 * dy + y0 * dx
+                x1 = ego_car_location.x
+                y1 = ego_car_location.y
+                return wp.s, abs(a * x1 + b * y1 + c) / math.sqrt(a * a + b * b)
+    
+        return None
