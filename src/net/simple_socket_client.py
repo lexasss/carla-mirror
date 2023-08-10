@@ -42,6 +42,23 @@ class SimpleSocketClient(EventBus):
 
     def disconnect(self) -> None:
         self.__connected = False
+        
+    @staticmethod
+    def test_connection(host: str, port: int) -> bool:
+        from time import sleep
+        
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if s.fileno() < 0:
+                raise SimpleSocketClientException('Problem with creating sockets')
+            s.settimeout(2.0)
+            s.connect((host, port))
+            sleep(0.2)
+            s.close()
+        except:
+            return False
+        
+        return True
 
     @staticmethod
     def __threading(client: Any, timeout: Optional[float]) -> None:
@@ -54,8 +71,8 @@ class SimpleSocketClient(EventBus):
             client.__socket.settimeout(timeout)
             try:
                 client.__socket.connect((client.__host, client.__port))
-            except TimeoutError as err:
-                raise SimpleSocketClientException('Connection timed out') from err
+            except:
+                raise SimpleSocketClientException('Connection timed out')
             client.__socket.settimeout(0.2)
             client.__connected = True
             client.emit('connect', (client.__host, client.__port))
