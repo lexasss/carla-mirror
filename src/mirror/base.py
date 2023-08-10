@@ -75,7 +75,7 @@ class Mirror:
             self._settings.offset_y = offset[1]
         
         pos = (location[0], location[1]) if location else (self._settings.x, self._settings.y)
-        if screen is not None and not settings_are_loaded:
+        if screen is not None: #and not settings_are_loaded:
             monitors = win32api.EnumDisplayMonitors()
             if len(monitors) > screen:
                 info = monitors[screen]

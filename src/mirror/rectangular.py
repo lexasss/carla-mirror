@@ -43,7 +43,7 @@ class RectangularMirror(Mirror):
         screen_size = desktops[settings.screen] if settings.screen < len(desktops) else desktops[0]
         
         if settings.distortion is not None:
-            shader = 'zoom_out'
+            shader = 'zoom_in'
         else:
             shader = None
             
