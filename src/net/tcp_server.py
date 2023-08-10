@@ -3,7 +3,7 @@ import threading
 from typing import Optional, Callable, Set, Any
 from socket import socket
 
-from src.net.seimple_socket_server import SimpleSocketServer
+from src.net.simple_socket_server import SimpleSocketServer
 
 PORT = 15554
 

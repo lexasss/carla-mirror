@@ -23,6 +23,13 @@ class ScenarioEnvironment(object):
         self.mirror_status = MirrorStatus()
         
     def __enter__(self):
+        settings = Settings()
+        server_host = settings.primary_mirror_host
+
+        is_tcp_server_running = TcpClient.can_connect(server_host)
+        if is_tcp_server_running:
+            self._is_primary_mirror = False
+
         if self._is_primary_mirror:
             try:
                 self._tcp_server = TcpServer()
@@ -35,8 +42,6 @@ class ScenarioEnvironment(object):
                 self.scenario = Scenario(self._task_screen, self._tcp_server, self.mirror_status) if self._task_screen else None
                 
         if not self._is_primary_mirror:
-            settings = Settings()
-            server_host = settings.primary_mirror_host
             self._tcp_client = TcpClient(server_host)
             self._tcp_client.connect(self.mirror_status.handle_net_request)
             

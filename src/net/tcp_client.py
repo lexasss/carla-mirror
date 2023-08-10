@@ -40,3 +40,12 @@ class TcpClient:
         answer = answer.decode().rstrip('\r\n')
         print(f'TCC: got {answer}')
         return answer
+
+    @staticmethod
+    def can_connect(host: str) -> bool:
+        try:
+            return SimpleSocketClient.test_connection(host, PORT)
+        except:
+            return False
+        
+        return True
