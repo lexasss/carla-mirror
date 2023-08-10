@@ -47,7 +47,7 @@ class CarlaEnvironment:
         rot = ego_car_transform.rotation
 
         ego_car_velocity = ego_car_snapshot.get_velocity()
-        meters_per_frame = math.sqrt(ego_car_velocity.x**2 + ego_car_velocity.y**2) / CarlaEnvironment.FPS       # because of the async mode, we need to compsate the path that the car travelled during the delay
+        meters_per_frame = math.sqrt(ego_car_velocity.x**2 + ego_car_velocity.y**2) / CarlaEnvironment.FPS       # because of the async mode, we need to compensate the path that the car travelled during the delay
 
         return carla.Location(
             loc.x + offset_x * math.sin(math.radians(rot.yaw)) + (offset_y + meters_per_frame) * math.cos(math.radians(rot.yaw)),
