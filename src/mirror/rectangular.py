@@ -39,8 +39,14 @@ class RectangularMirror(Mirror):
                  world: Optional[carla.World] = None,
                  vehicle: Optional[carla.Vehicle] = None) -> None:
 
-        desktops = pygame.display.get_desktop_sizes()
-        screen_size = desktops[settings.screen] if settings.screen < len(desktops) else desktops[0]
+        screen_sizes = pygame.display.get_desktop_sizes()
+        screen_size = screen_sizes[0]
+        if settings.use_smart_display:
+            mirror_screen = Mirror.get_best_fit_screen_rect(settings.type.value)
+            screen_size = mirror_screen[2], mirror_screen[3]
+        else:
+            if settings.screen < len(screen_sizes):
+                screen_size = screen_sizes[settings.screen]
         
         if settings.distortion is not None:
             shader = 'zoom_in'

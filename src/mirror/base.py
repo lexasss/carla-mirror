@@ -78,7 +78,8 @@ class Mirror:
         pos = (location[0], location[1]) if location else (self._settings.x, self._settings.y)
 
         if use_smart_display:
-            pos = self._get_smart_screen(type)
+            screen_rect = Mirror.get_best_fit_screen_rect(type)
+            pos = screen_rect[0], screen_rect[1]
         elif screen is not None: #and not settings_are_loaded:
             monitors = win32api.EnumDisplayMonitors()
             if len(monitors) > screen:
@@ -174,6 +175,33 @@ class Mirror:
                 self._display_gl.zoom_out()
                 
 
+    @staticmethod
+    def get_best_fit_screen_rect(mirror_type: str) -> Tuple[int]:
+        monitors: List[Tuple[win32api.PyHANDLE,win32api.PyHANDLE,Tuple[int]]] = win32api.EnumDisplayMonitors()
+        
+        result: Optional[Tuple[int]] = None
+        for monitor in monitors:
+            monitor_rect = monitor[2]
+            if result is None:
+                result = monitor_rect
+                continue
+
+            if mirror_type.find('left') >= 0:
+                result_left_bottom_sum = -result[0] + result[1] + result[3]
+                monitor_left_bottom_sum = -monitor_rect[0] + monitor_rect[1] + monitor_rect[3]
+                if monitor_left_bottom_sum >= result_left_bottom_sum:
+                    result = monitor_rect
+            elif mirror_type.find('right') >= 0:
+                result_right_bottom_sum = result[0] + result[1] + result[2] + result[3]
+                monitor_right_bottom_sum = monitor_rect[0] + monitor_rect[1] + monitor_rect[2] + monitor_rect[3]
+                if monitor_right_bottom_sum >= result_right_bottom_sum:
+                    result = monitor_rect
+            elif mirror_type.find('rear') >= 0 or mirror_type.find('wideview') >= 0:
+                if monitor_rect[0] >= -200 and monitor_rect[0] <= 200 and monitor_rect[1] >= result[1]:
+                    result = monitor_rect
+            
+        return result[0], result[1], (result[2] - result[0]), (result[3] - result[1])
+    
     # Internal
 
     def _make_display(self, size: Tuple[int, int]) -> pygame.surface.Surface:
@@ -254,25 +282,3 @@ class Mirror:
             self._brightness = max(self._brightness - Mirror.BRIGHTNESS_CHANGE_PER_TICK, self.brightness)
         elif self.brightness > self._brightness:
             self._brightness = min(self._brightness + Mirror.BRIGHTNESS_CHANGE_PER_TICK, self.brightness)
-
-    def _get_smart_screen(self, mirror_type: str) -> Tuple[int]:
-        monitors: List[List[List[int]]] = win32api.EnumDisplayMonitors()
-        
-        best_fit_monitor_rect: List[int] = [0, 0, 0, 0]
-        for monitor in monitors:
-            monitor_rect = monitor[2]
-            if mirror_type.find('left') >= 0:
-                if monitor_rect[0] <= best_fit_monitor_rect[0] and monitor_rect[1] >= best_fit_monitor_rect[1]:
-                    best_fit_monitor_rect = monitor_rect
-            elif mirror_type.find('right') >= 0:
-                if monitor_rect[0] >= best_fit_monitor_rect[0] and monitor_rect[1] >= best_fit_monitor_rect[1]:
-                    best_fit_monitor_rect = monitor_rect
-                pass
-            elif mirror_type.find('rear') >= 0 or mirror_type.find('wideview') >= 0:
-                if monitor_rect[0] >= -200 and monitor_rect[0] <= 200 and monitor_rect[1] >= best_fit_monitor_rect[1]:
-                    best_fit_monitor_rect = monitor_rect
-                pass
-            else:
-                return (0, 0)
-            
-        return best_fit_monitor_rect[0], best_fit_monitor_rect[1]
