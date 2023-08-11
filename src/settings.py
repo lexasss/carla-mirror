@@ -24,6 +24,7 @@ class Settings:
         self.offset = [int(x) for x in args.offset.split(',')] if args.offset else None
 
         self.screen: int = args.display
+        self.use_smart_display: int = args.smart_display
 
         self.distortion: Optional[float] = args.distortion
         self.is_shader_control_by_mouse = args.mouse == True
@@ -82,13 +83,15 @@ def make_args():
         '--location',
         metavar='X,Y',
         default=None,
-        help='Mirror X,Y location. If not specified, then either a default location is used, or the location used previously')
+        help='Mirror X,Y location. If not specified, then either a default location is used, \
+            or the location used previously')
     argparser.add_argument(
         '-o',
         '--offset',
         metavar='X,Y',
         default=None,
-        help='Mirror X,Y offset for R-type mirrors. If not specified, then either a default offset is used (0,0), or the offset used previously')
+        help='Mirror X,Y offset for R-type mirrors. If not specified, then either a default \
+            offset is used (0,0), or the offset used previously')
     argparser.add_argument(
         '-c',
         '--fullscreen',
@@ -100,7 +103,16 @@ def make_args():
         '--display',
         default=0,
         type=int,
-        help='Screen to use (default: 0)')
+        help='Screen to use (default: 0). Ignored if --smart-display is used')
+    
+    argparser.add_argument(
+        '-sm',
+        '--smart-display',
+        action='store_true',
+        help='Tries to reveal the display to use from the mirror type. So, left mirrors \
+            will be shown on the left-bottom -most display, right mirror on the right-bottom -most \
+            display, rear and wideview will be shown on the display below the main display, \
+            other displays will be shown on the main display')
     
     # Mirror distortion features
     argparser.add_argument(
@@ -117,7 +129,9 @@ def make_args():
         '-u',
         '--mouse',
         action='store_true',
-        help='Enables shader control by mouse. Allows manipulating zoom rate with mouse-scroll (all shaders) and distortion change point with mouse movements (for "linear + parabolic" only)')
+        help='Enables shader control by mouse. Allows manipulating zoom rate with \
+            mouse-scroll (all shaders) and distortion change point with mouse movements \
+            (for "linear + parabolic" only)')
     
     # Driving features
     argparser.add_argument(
@@ -129,7 +143,8 @@ def make_args():
         '-a',
         '--adopt-egocar',
         action='store_true',
-        help='A flag to indicate that this is the primary mirror, even though the driving car exists already, which is usually the case when the manual driving mode is set')
+        help='A flag to indicate that this is the primary mirror, even though the driving car \
+            exists already, which is usually the case when the manual driving mode is set')
     
     # Other options
     argparser.add_argument(
@@ -143,6 +158,7 @@ def make_args():
     argparser.add_argument(
         '--pm-host',
         default='localhost',
-        help='IP of the PC running the primary mirror (default: localhost). Used when launching secondary mirrors only')
+        help='IP of the PC running the primary mirror (default: localhost). \
+            Used when launching secondary mirrors only')
     
     return argparser.parse_args()

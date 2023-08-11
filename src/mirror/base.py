@@ -32,6 +32,7 @@ class Mirror:
                  world: Optional[carla.World] = None,
                  shader: Optional[str] = None,
                  screen: Optional[int] = None,
+                 use_smart_display: Optional[bool] = None,
                  is_camera: bool = False) -> None:
         self.world = world
         
@@ -75,7 +76,10 @@ class Mirror:
             self._settings.offset_y = offset[1]
         
         pos = (location[0], location[1]) if location else (self._settings.x, self._settings.y)
-        if screen is not None: #and not settings_are_loaded:
+
+        if use_smart_display:
+            pos = self._get_smart_screen(type)
+        elif screen is not None: #and not settings_are_loaded:
             monitors = win32api.EnumDisplayMonitors()
             if len(monitors) > screen:
                 info = monitors[screen]
@@ -250,3 +254,25 @@ class Mirror:
             self._brightness = max(self._brightness - Mirror.BRIGHTNESS_CHANGE_PER_TICK, self.brightness)
         elif self.brightness > self._brightness:
             self._brightness = min(self._brightness + Mirror.BRIGHTNESS_CHANGE_PER_TICK, self.brightness)
+
+    def _get_smart_screen(self, mirror_type: str) -> Tuple[int]:
+        monitors: List[List[List[int]]] = win32api.EnumDisplayMonitors()
+        
+        best_fit_monitor_rect: List[int] = [0, 0, 0, 0]
+        for monitor in monitors:
+            monitor_rect = monitor[2]
+            if mirror_type.find('left') >= 0:
+                if monitor_rect[0] <= best_fit_monitor_rect[0] and monitor_rect[1] >= best_fit_monitor_rect[1]:
+                    best_fit_monitor_rect = monitor_rect
+            elif mirror_type.find('right') >= 0:
+                if monitor_rect[0] >= best_fit_monitor_rect[0] and monitor_rect[1] >= best_fit_monitor_rect[1]:
+                    best_fit_monitor_rect = monitor_rect
+                pass
+            elif mirror_type.find('rear') >= 0 or mirror_type.find('wideview') >= 0:
+                if monitor_rect[0] >= -200 and monitor_rect[0] <= 200 and monitor_rect[1] >= best_fit_monitor_rect[1]:
+                    best_fit_monitor_rect = monitor_rect
+                pass
+            else:
+                return (0, 0)
+            
+        return best_fit_monitor_rect[0], best_fit_monitor_rect[1]

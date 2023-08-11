@@ -39,7 +39,9 @@ class SideMirror(Mirror):
                          settings.location,
                          mask_name = f'{settings.type.value}_mirror',
                          world = world,
-                         shader = shader) 
+                         shader = shader,
+                         screen = settings.screen,
+                         use_smart_display = settings.use_smart_display) 
                 
         if not self._settings.is_initialized():
             screen_size = pygame.display.get_desktop_sizes()[0]

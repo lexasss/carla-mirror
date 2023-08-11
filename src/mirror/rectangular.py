@@ -55,7 +55,8 @@ class RectangularMirror(Mirror):
                          mask_name = None,
                          world = world,
                          shader = shader,
-                         screen = settings.screen) 
+                         screen = settings.screen,
+                         use_smart_display = settings.use_smart_display) 
 
         if settings.is_fullscreen or not settings.size:
             self._is_topmost = False
