@@ -23,12 +23,12 @@ class RectangularMirror(Mirror):
         'vehicle.toyota.prius': 1.3,
         'vehicle.audi.tt': 1.3,
         'vehicle.mercedes.coupe_2020': 1.3,
-        'vehicle.dreyevr.egovehicle': 1.3,
+        'vehicle.dreyevr.egovehicle': 1.65,
     }
 
     REAR_VIEW_CAMERA_X = 0.3              # offset forward
     
-    # CAMERA_PITCH_K = -20        # value of fov per one degree downward: for example, if fov=120 and CAMERA_PITCH_K=-20, then the camera pitch is 120/-20 = -6
+    CAMERA_PITCH_K = -20        # value of fov per one degree downward: for example, if fov=120 and CAMERA_PITCH_K=-20, then the camera pitch is 120/-20 = -6
     CAMERA_YAW_TOWARD_CAR = 2
     
     camera_offset = Offset()    # camera offset, controlled via set_camera_offset
@@ -77,21 +77,30 @@ class RectangularMirror(Mirror):
         cam_x = RectangularMirror.camera_offset.forward
         cam_y = 0
         cam_z = RectangularMirror.camera_offset.up
-        cam_rot = 180
+        cam_yaw = 180
+        cam_pitch = settings.pitch if settings.pitch is not None else settings.fov / RectangularMirror.CAMERA_PITCH_K
         if settings.type == MirrorType.RLEFT:
             cam_y = -RectangularMirror.camera_offset.left
-            cam_rot = 180 + (settings.fov / 2 - RectangularMirror.CAMERA_YAW_TOWARD_CAR)
+            if settings.yaw is not None:
+                cam_yaw = settings.yaw
+            else:
+                cam_yaw = 180 + (settings.fov / 2 - RectangularMirror.CAMERA_YAW_TOWARD_CAR)
         elif settings.type == MirrorType.RRIGHT:
             cam_y = RectangularMirror.camera_offset.left
-            cam_rot = 180 - (settings.fov / 2 - RectangularMirror.CAMERA_YAW_TOWARD_CAR)
+            if settings.yaw is not None:
+                cam_yaw = settings.yaw
+            else:
+                cam_yaw = 180 - (settings.fov / 2 - RectangularMirror.CAMERA_YAW_TOWARD_CAR)
         elif settings.type == MirrorType.RREAR:
             cam_x = RectangularMirror.REAR_VIEW_CAMERA_X
             cam_z = RectangularMirror.rear_view_camera_elevation
-            
-        # pitch = settings.pitch if settings.pitch is not None else settings.fov / RectangularMirror.CAMERA_PITCH_K
+            cam_pitch = -8
+            if settings.yaw is not None:
+                cam_yaw = settings.yaw
+        
         transform = carla.Transform(
             carla.Location(cam_x, cam_y, cam_z),
-            carla.Rotation(yaw = cam_rot)
+            carla.Rotation(yaw = cam_yaw, pitch = cam_pitch)
         )
         self.camera = self._make_camera(self.width, self.height, settings.fov, transform, vehicle) if vehicle is not None else None
         

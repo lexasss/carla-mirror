@@ -19,6 +19,7 @@ class Settings:
         self.size = [int(x) for x in args.res.split('x')]
         self.fov: int = args.fov
         self.pitch: Optional[float] = args.pitch
+        self.yaw: Optional[float] = args.yaw
         self.is_fullscreen = args.fullscreen == True
         self.location = [int(x) for x in args.location.split(',')] if args.location else None
         self.offset = [int(x) for x in args.offset.split(',')] if args.offset else None
@@ -78,6 +79,12 @@ def make_args():
         default=None,
         type=float,
         help='Camera pitch (default: dependant on FOV)')
+    argparser.add_argument(
+        '-y',
+        '--yaw',
+        default=None,
+        type=float,
+        help='Camera yaw (default: dependant on the mirror)')
     argparser.add_argument(
         '-l',
         '--location',

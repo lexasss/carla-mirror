@@ -82,5 +82,31 @@
       "offset_x": 0,
       "offset_y": 200
     }
+  },
+  "0x645d86af160c": {
+    "rleft": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720,
+      "offset_x": 0,
+      "offset_y": 0
+    },
+    "rrear": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 420,
+      "offset_x": 3,
+      "offset_y": 280
+    },
+    "rright": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720,
+      "offset_x": 0,
+      "offset_y": 0
+    }
   }
 }
