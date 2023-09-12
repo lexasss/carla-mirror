@@ -1,8 +1,8 @@
-from src.winapi import Window
-from src.settings import Settings
 from src.mirror.settings import MirrorSettings
 from src.mirror.opengl_renderer import OpenGLRenderer
-from src.exp.logging import ImageLogger
+from src.common.logging import ImageLogger
+from src.common.settings import Settings
+from src.common.winapi import Window
 
 from typing import Optional, Tuple, List, cast
 

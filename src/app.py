@@ -8,7 +8,7 @@ try:
 except ImportError:
     raise RuntimeError('cannot import CARLA')
 
-from src.utils import suppress_stdout
+from src.common.utils import suppress_stdout
 
 try:
     with suppress_stdout():
@@ -18,8 +18,8 @@ except ImportError:
 
 import time
 
-from src.user_action import UserAction, ActionType, Action
-from src.settings import Settings, MirrorType
+from src.common.user_action import UserAction, ActionType, Action
+from src.common.settings import Settings, MirrorType
 from src.runner import Runner
 
 from src.carla.sync_mode import CarlaSyncMode
@@ -33,9 +33,11 @@ from src.mirror.top_view import TopViewMirror
 from src.mirror.rectangular import RectangularMirror
 from src.mirror.base import Mirror
 
-from src.exp.logging import EventLogger
 from src.exp.scenario import Scenario
 from src.exp.scenario_env import ScenarioEnvironment
+from src.exp.traffic_state import TrafficState
+
+from src.common.logging import EventLogger
 
 class Finished(Exception):
     pass
@@ -79,7 +81,7 @@ class App:
 
             mirror = self._create_mirror(settings, world, ego_car)
 
-            if is_ego_car_created or settings.is_primary_mirror:
+            if is_ego_car_created or settings.adopt_egocar:
                 mirror_name = str(settings.type).split('.')[1].lower()
                 self._logger.log('mirror', mirror_name)
                 car_name = '_'.join(ego_car.type_id.split('.')[1:])
@@ -94,8 +96,9 @@ class App:
                 self._spawned_actors.append(mirror.camera)
                 
             self._monitor = CarlaMonitor(world)
+            self._traffic_state = TrafficState()
             
-            self._show_carla_mirror(mirror, runner)
+            self._show_carla_mirror(mirror, runner, settings.scenario)
 
         finally:
             for actor in self._spawned_actors:
@@ -108,67 +111,72 @@ class App:
     def _run_loop(self,
                  sync_mode: CarlaSyncMode,
                  mirror: Mirror,
-                 runner: Optional[Runner]):
-        clock = pygame.time.Clock()
-
-        try:
-            with ScenarioEnvironment(runner is not None) as env:
-                scenario = env.scenario
-                timeout = 5.0 if scenario else 0.2
+                 runner: Optional[Runner],
+                 env: ScenarioEnvironment,
+                 timeout: float):
                 
-                while True:
-                    action = UserAction.get()
-                    
-                    if scenario:
-                        scenario.tick()
-                        if action is None: 
-                            action = scenario.get_action()
-                            
-                    self._handle_action(action, mirror, scenario, runner)
+        clock = pygame.time.Clock()
+        scenario = env.scenario if env is not None else None
 
-                    mirror_image: Optional[carla.Image] = None
-                    spawned: Optional[carla.Actor] = None
-                    
-                    if not env.mirror_status.is_frozen:
-                        # Advance the simulation and wait for the data.
-                        queries = sync_mode.tick(timeout)
-                        if queries:
-                            snapshot, image = queries
-                            mirror_image = cast(carla.Image, image)
-                            
-                            # self._print_image(mirror)
-                        
-                            if runner:
-                                carla_snapshot = cast(carla.WorldSnapshot, snapshot)
-                                ego_car_snapshot, spawned = runner.make_step(carla_snapshot, action)
-                                
-                                if scenario:
-                                    self._update_scenario_state(scenario, runner, ego_car_snapshot)
-                                    if action:
-                                        scenario.report_action_result(action, spawned is not None)
-
-                    if spawned:
-                        self._spawned_actors.append(spawned)
-
-                    mirror.draw_image(mirror_image)
-                    
-                    pygame.display.flip()
-                    
-                    clock.tick(CarlaEnvironment.FPS)
-        except Finished:
-            pass
+        while True:
+            action = UserAction.get()
             
-        self._remove_spawned(sync_mode)
+            if scenario:
+                scenario.tick()
+                if action is None: 
+                    action = scenario.get_action()
+                    
+            self._handle_action(action, mirror, scenario, runner)
+
+            mirror_image: Optional[carla.Image] = None
+            spawned: Optional[carla.Actor] = None
+            
+            avoid_drawing_reflection = env is not None and env.mirror_status.is_frozen
+            if not avoid_drawing_reflection:
+                # Advance the simulation and wait for the data.
+                queries = sync_mode.tick(timeout)
+                if queries:
+                    snapshot, image = queries
+                    mirror_image = cast(carla.Image, image)
+                    
+                    if runner:
+                        world_snapshot = cast(carla.WorldSnapshot, snapshot)
+                        ego_car_snapshot, spawned = runner.make_step(world_snapshot, action)
+                        
+                        if scenario:
+                            self._update_scenario_state(scenario, runner, ego_car_snapshot)
+                            if action:
+                                scenario.report_action_result(action, spawned is not None)
+
+            if spawned:
+                self._spawned_actors.append(spawned)
+
+            mirror.draw_image(mirror_image)
+            
+            pygame.display.flip()
+            
+            clock.tick(CarlaEnvironment.FPS)
 
     def _show_carla_mirror(self,
                            mirror: Mirror,
-                           runner: Optional[Runner]):
+                           runner: Optional[Runner],
+                           scenario: Optional[str]):
         try:
             with CarlaSyncMode(cast(carla.World, mirror.world),
                             CarlaEnvironment.FPS,
                             runner is not None,
                             cast(carla.Sensor, mirror.camera)) as sync_mode:     # Create a synchronous mode context.
-                self._run_loop(sync_mode, mirror, runner)
+                try:
+                    if scenario is not None:
+                        with ScenarioEnvironment(runner is not None) as env:
+                            self._run_loop(sync_mode, mirror, runner, env, timeout=5.0)
+                    else:
+                        self._run_loop(sync_mode, mirror, runner, env=None, timeout=0.2)
+                except Finished:
+                    pass
+            
+            self._remove_spawned(sync_mode)
+
         finally:
             time.sleep(0.5)
 
@@ -259,10 +267,16 @@ class App:
         else:
             scenario.set_search_target_distance(runner.controller.get_distance_to(ego_car_snapshot, runner.search_target))
         
-        vehicle, distance, lane = self._monitor.get_nearest_vehicle_behind(ego_car_snapshot)
-        if vehicle and lane:
-            if scenario.set_nearest_vehicle_behind(vehicle.type_id, distance, lane, runner.ego_car_speed):
-                runner.mirror.save_snapshot(f'{lane}_{distance:.0f}')
+        car_behind, all_distances = self._monitor.get_nearest_vehicle_behind(ego_car_snapshot)
+        
+        self._traffic_state.reset()
+        self._traffic_state.ego_car_lane_props = self._monitor.get_lane_props(ego_car_snapshot)
+        self._traffic_state.update(all_distances)
+        self._traffic_state.log()
+
+        if car_behind is not None:
+            if scenario.set_nearest_vehicle_behind(car_behind.vehicle.type_id, car_behind.distance, car_behind.lane, runner.ego_car_speed):
+                runner.mirror.save_snapshot(f'{car_behind.lane}_{car_behind.distance:.0f}')
         
     def _remove_spawned(self, sync_mode: CarlaSyncMode):
         actors = [x for x in self._spawned_actors if not x.type_id.startswith('sensor.')]

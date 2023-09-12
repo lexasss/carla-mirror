@@ -3,7 +3,7 @@ from typing import Optional
 import carla
 import pygame
 
-from src.settings import Settings
+from src.common.settings import Settings
 from src.mirror.base import Mirror
 
 class WideviewMirror(Mirror):

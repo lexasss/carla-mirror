@@ -3,8 +3,8 @@ from typing import Optional
 import pygame
 import carla
 
-from src.settings import Settings, MirrorType
-from src.offset import Offset
+from src.common.settings import Settings, MirrorType
+from src.common.offset import Offset
 from src.mirror.base import Mirror
 from src.mirror.settings import MirrorSettings
 

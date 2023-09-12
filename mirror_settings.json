@@ -1,8 +1,8 @@
 {
   "0x3065ecc8123a": {
     "left": {
-      "x": 5,
-      "y": 586,
+      "x": 6,
+      "y": -1,
       "width": 480,
       "height": 320,
       "offset_x": 0,
@@ -17,7 +17,7 @@
       "offset_y": 0
     },
     "wideview": {
-      "x": 480,
+      "x": 0,
       "y": 0,
       "width": 960,
       "height": 240,

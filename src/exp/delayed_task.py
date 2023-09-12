@@ -1,6 +1,6 @@
 import time
 
-from typing import  Callable, Any
+from typing import Callable, Any
 
 class DelayedTask:
     def __init__(self, delay: float, cb: Callable[..., None], *args: Any, is_repetitive: bool = False) -> None:

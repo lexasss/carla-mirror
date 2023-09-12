@@ -3,6 +3,8 @@ import argparse
 from typing import Optional
 from enum import Enum
 
+from src.common.user_action import UserAction
+
 class MirrorType(Enum):
     LEFT = 'left'           # left with mirror frame
     RIGHT = 'right'         # right with mirror frame
@@ -11,6 +13,9 @@ class MirrorType(Enum):
     RRIGHT = 'rright'       # rectangular right
     RREAR = 'rrear'         # rectangular rearview
     TOPVIEW = 'topview'     # view from the top (not a mirror)
+
+class ScenarioType(Enum):
+    APPROACH = 'approach'
 
 class Settings:
     def __init__(self) -> None:
@@ -30,12 +35,13 @@ class Settings:
         self.distortion: Optional[float] = args.distortion
         self.is_shader_control_by_mouse = args.mouse == True
 
-        self.is_primary_mirror = args.adopt_egocar == True
+        self.adopt_egocar = args.adopt_egocar == True
         self.is_manual_mode = args.manual == True
 
         self.town: Optional[str] = args.map
         self.host: str = args.host
         self.primary_mirror_host: str = args.pm_host
+        self.scenario: Optional[str] = args.scenario
 
         if self.size[0] == 0 or self.size[1] == 0:
             self.size = None
@@ -51,8 +57,29 @@ def make_args():
     # _ w e _ _ y _ i _ _
     # _ s _ _ g _ j k _
     # z x c v b n _
+    
+    def to_key(code: int) -> str:
+        if code == 27:
+            return 'ESCAPE'
+        elif code in range(32, 255):
+            return chr(code)
+        elif code in range(0x4000_003A, 0x4000_0049):
+            return f'F_{code-0x4000_0039}'
+        elif code == 0x4000_0050:
+            return 'LEFT'
+        elif code == 0x4000_004F:
+            return 'RIGHT'
+        elif code in range(0x4000_0058, 0x4000_0062):
+            return f'KP_{code-0x4000_0058}'
+        else:
+            return '?' + str(code)
+    
+    shortcuts = [(to_key(key) + ' = ' + str(UserAction.SHORTCUTS[key].type).split('.')[1] + ' ' + (str(UserAction.SHORTCUTS[key].param or ' '))).ljust(78, chr(0xA0)) for key in UserAction.SHORTCUTS]
+        
     argparser = argparse.ArgumentParser(
-        description='CARLA mirror')
+        description='CARLA mirror',
+        epilog='Shortcuts:'.ljust(78, chr(0xA0)) + ' '.join(shortcuts),
+    )
     
     # Mirror main features
     argparser.add_argument(
@@ -167,5 +194,11 @@ def make_args():
         default='localhost',
         help='IP of the PC running the primary mirror (default: localhost). \
             Used when launching secondary mirrors only')
-    
+    argparser.add_argument(
+        '-s',
+        '--scenario',
+        default=None,
+        choices=[type.value for type in list(ScenarioType)],
+        help='Scenarion to run. Empty argument means no scenario to execute')
+
     return argparser.parse_args()

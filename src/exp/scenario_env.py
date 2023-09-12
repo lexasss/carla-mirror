@@ -2,7 +2,7 @@ import socket
 
 from typing import Optional, Any
 
-from src.settings import Settings
+from src.common.settings import Settings
 
 from src.exp.scenario import Scenario
 from src.exp.mirror_status import MirrorStatus

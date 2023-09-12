@@ -2,16 +2,15 @@ import carla
 
 from typing import Optional, Tuple, cast
 
-from src.user_action import ActionType, Action, CarSpawningLocation
-# from src.winapi import Window
-
 from src.mirror.base import Mirror
 
 from src.carla.environment import CarlaEnvironment
 from src.carla.vehicle_factory import VehicleFactory
 from src.carla.controller import CarlaController
 
-from src.exp.logging import EventLogger
+from src.common.logging import EventLogger
+from src.common.user_action import ActionType, Action, CarSpawningLocation
+# from src.common.winapi import Window
 
 TRAFFIC_COUNT = 0
 BLOCK_MIRROR_ON_CAR_APPROACHING_FROM_BEHIND = False
@@ -71,11 +70,13 @@ class Runner:
         self.ego_car_speed = 3.6 * ego_car_snapshot.get_velocity().length()
 
         # update display
-        self.controller.display_speed(ego_car_snapshot, self.ego_car_speed)
-        self.controller.update_info(ego_car_snapshot)
         
-        if self.search_target:
-            self.controller.display_target_info(ego_car_snapshot, self.search_target)
+        # self.controller.display_speed(ego_car_snapshot, self.ego_car_speed)
+        # self.controller.update_info(ego_car_snapshot)
+        
+        # if self.search_target:
+        #    self.controller.display_target_info(ego_car_snapshot, self.search_target)
+            
         # if self._last_vehicle:
         #     self.controller.display_vehicle_info(ego_car_snapshot, self._last_vehicle)
 

@@ -2,7 +2,7 @@ import sys
 from typing import Callable
 
 # from src.exp.task_screen import TaskResponse
-from src.carla.lane import Lane
+from src.common.lane import Lane
 
 MAX_SCORE_TARGET: float = 100
 MAX_SCORE_TASK: float = 100

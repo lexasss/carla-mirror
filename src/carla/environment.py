@@ -6,11 +6,11 @@ from typing import Callable, Optional
 
 # from src.carla.vehicle_factory import VehicleFactory
 
-from src.offset import Offset
+from src.common.offset import Offset
 
 
 class CarlaEnvironment:
-    FPS = 30
+    FPS = 60
     
     DRIVERS = {
         'vehicle.lincoln.mkz_2017': Offset(0.10, 0.32, 1.28),

@@ -1,28 +1,27 @@
 import carla
 import math
-import sys
 
 from typing import Optional, Tuple, List, cast
 
-from src.carla.traffic_state import TrafficState
-from src.carla.lane import Lane
+from src.common.lane import Lane
 
+class CarBehind:
+    def __init__(self, vehicle: carla.Vehicle, distance: float, lane: Lane) -> None:
+        self.vehicle = vehicle
+        self.distance = distance
+        self.lane = lane
+        
 class CarlaMonitor:
     def __init__(self, world: carla.World) -> None:
         self._world = world
         self._map = self._world.get_map()
-        self._traffic_state = TrafficState()
         
-    def get_nearest_vehicle_behind(self, ego_car_snapshot: carla.ActorSnapshot) -> Tuple[Optional[carla.Vehicle], float, Optional[str]]:
+    def get_nearest_vehicle_behind(self, ego_car_snapshot: carla.ActorSnapshot) -> Tuple[Optional[CarBehind], List[Tuple[float, Lane]]]:
         actors = self._world.get_actors().filter('vehicle.*')
         vehicles = cast(List[carla.Vehicle], actors)
         
-        min_distance = sys.float_info.max
-        car: Optional[carla.Vehicle] = None
-        lane: Optional[str] = None
-
-        self._traffic_state.reset()
-        self._traffic_state.ego_car_lane_props = self._get_lane_props(ego_car_snapshot)
+        car_behind: Optional[CarBehind] = None
+        all_distances: List[Tuple[float, Lane]] = []
 
         for vehicle in vehicles:
             transform = vehicle.get_transform()
@@ -31,16 +30,13 @@ class CarlaMonitor:
             is_approaching_from_behind, distance = CarlaMonitor._is_approaching_from_behind(transform, velocity, ego_car_snapshot)
             if is_approaching_from_behind:
                 lane = self.get_lane(ego_car_snapshot, vehicle)
-                self._traffic_state.update(distance, lane)
-                if distance < min_distance:
-                    min_distance = distance
-                    car = vehicle
+                all_distances.append((distance, lane))
+                if not car_behind or distance < car_behind.distance:
+                    car_behind = CarBehind(vehicle, distance, lane)
 
-        self._traffic_state.log()
-
-        return car, min_distance, lane
+        return car_behind, all_distances
     
-    def get_lane(self, ego_car_snapshot: carla.ActorSnapshot, other_car: carla.Vehicle) -> Optional[str]:
+    def get_lane(self, ego_car_snapshot: carla.ActorSnapshot, other_car: carla.Vehicle) -> Optional[Lane]:
         
         ego_car_tranform = ego_car_snapshot.get_transform()
         ego_car_waypoint = self._map.get_waypoint(ego_car_tranform.location, True, carla.LaneType.Driving)
@@ -60,7 +56,27 @@ class CarlaMonitor:
             return Lane.RIGHT
         else:
             return Lane.SAME
-        
+    
+    def get_lane_props(self, ego_car_snapshot: carla.ActorSnapshot) -> Optional[Tuple[float, float]]:
+        ego_car_location = ego_car_snapshot.get_transform().location
+        wp = self._map.get_waypoint(ego_car_location, True, carla.LaneType.Driving)
+        if wp:
+            wps = wp.next(1)
+            if len(wps) > 0:
+                wp_next = wps[0]
+                x0 = wp.transform.location.x
+                y0 = wp.transform.location.y
+                dx = wp_next.transform.location.x - x0
+                dy = wp_next.transform.location.y - y0
+                a = dy
+                b = -dx
+                c = -x0 * dy + y0 * dx
+                x1 = ego_car_location.x
+                y1 = ego_car_location.y
+                return wp.s, abs(a * x1 + b * y1 + c) / math.sqrt(a * a + b * b)
+    
+        return None        
+    
     # Internal
     
     @staticmethod
@@ -110,23 +126,3 @@ class CarlaMonitor:
             return False, 0
         
         return True, dist
-    
-    def _get_lane_props(self, ego_car_snapshot: carla.ActorSnapshot) -> Optional[Tuple[float, float]]:
-        ego_car_location = ego_car_snapshot.get_transform().location
-        wp = self._map.get_waypoint(ego_car_location, True, carla.LaneType.Driving)
-        if wp:
-            wps = wp.next(1)
-            if len(wps) > 0:
-                wp_next = wps[0]
-                x0 = wp.transform.location.x
-                y0 = wp.transform.location.y
-                dx = wp_next.transform.location.x - x0
-                dy = wp_next.transform.location.y - y0
-                a = dy
-                b = -dx
-                c = -x0 * dy + y0 * dx
-                x1 = ego_car_location.x
-                y1 = ego_car_location.y
-                return wp.s, abs(a * x1 + b * y1 + c) / math.sqrt(a * a + b * b)
-    
-        return None

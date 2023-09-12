@@ -5,15 +5,15 @@ from typing import Optional, List, cast
 
 from queue import SimpleQueue
 
-from src.user_action import Action, ActionType, DriverTask, CarSpawningLocation
-
 from src.exp.task_screen import TaskScreenRequests, TaskScreenRequest, TaskScreen
-from src.exp.logging import EventLogger
 from src.exp.delayed_task import DelayedTask
 from src.exp.mirror_status import MirrorStatus, NetCmd
 from src.exp.scoring import Scoring
 
 from src.net.tcp_server import TcpServer
+
+from src.common.logging import EventLogger
+from src.common.user_action import Action, ActionType, DriverTask, CarSpawningLocation
 
 REPETITIONS = 6
 DISTANCES = [5, 25, 40]
