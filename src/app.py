@@ -18,9 +18,11 @@ except ImportError:
 
 import time
 
+from src.runner import Runner
+
 from src.common.user_action import UserAction, ActionType, Action
 from src.common.settings import Settings, MirrorType
-from src.runner import Runner
+from src.common.performance import Performance
 
 from src.carla.sync_mode import CarlaSyncMode
 from src.carla.environment import CarlaEnvironment
@@ -118,15 +120,23 @@ class App:
         clock = pygame.time.Clock()
         scenario = env.scenario if env is not None else None
 
+        perf = Performance('user input', 'scenario update', 'handling user input', 'CARLA data retrieval',
+                           'camera update', 'scenario state', 'graphics', 'clock')
+        
         while True:
+            perf.start()
+            
             action = UserAction.get()
+            perf.add('user input')
             
             if scenario:
                 scenario.tick()
                 if action is None: 
                     action = scenario.get_action()
-                    
+            perf.add('scenario update')
+            
             self._handle_action(action, mirror, scenario, runner)
+            perf.add('handling user input')
 
             mirror_image: Optional[carla.Image] = None
             spawned: Optional[carla.Actor] = None
@@ -135,6 +145,7 @@ class App:
             if not avoid_drawing_reflection:
                 # Advance the simulation and wait for the data.
                 queries = sync_mode.tick(timeout)
+                perf.add('CARLA data retrieval')
                 if queries:
                     snapshot, image = queries
                     mirror_image = cast(carla.Image, image)
@@ -142,20 +153,25 @@ class App:
                     if runner:
                         world_snapshot = cast(carla.WorldSnapshot, snapshot)
                         ego_car_snapshot, spawned = runner.make_step(world_snapshot, action)
+                        perf.add('camera update')
                         
                         if scenario:
                             self._update_scenario_state(scenario, runner, ego_car_snapshot)
                             if action:
                                 scenario.report_action_result(action, spawned is not None)
+                            perf.add('scenario state')
 
             if spawned:
                 self._spawned_actors.append(spawned)
 
             mirror.draw_image(mirror_image)
-            
             pygame.display.flip()
+            perf.add('graphics')
             
             clock.tick(CarlaEnvironment.FPS)
+            perf.add('clock')
+            
+            perf.end()
 
     def _show_carla_mirror(self,
                            mirror: Mirror,
@@ -177,6 +193,8 @@ class App:
             
             self._remove_spawned(sync_mode)
 
+        except Exception as ex:
+            print(f'[EXP]: {ex}')
         finally:
             time.sleep(0.5)
 

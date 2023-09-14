@@ -10,7 +10,7 @@ from src.common.offset import Offset
 
 
 class CarlaEnvironment:
-    FPS = 60
+    FPS = 30
     
     DRIVERS = {
         'vehicle.lincoln.mkz_2017': Offset(0.10, 0.32, 1.28),

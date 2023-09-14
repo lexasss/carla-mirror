@@ -105,7 +105,7 @@ class Mirror:
 
         if not self.enabled:
             self._display.fill(Mirror.BLANK_COLOR)
-        elif image:
+        elif image is not None:
             buffer = self._get_image_as_array(image)
             normal_view = buffer.swapaxes(0, 1)
             image_surface = pygame.surfarray.make_surface(normal_view)

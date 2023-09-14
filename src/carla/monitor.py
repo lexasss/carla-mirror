@@ -1,15 +1,21 @@
+'''
+This class serves for experiments, but is located in this folder
+only because it references CARLA.
+'''
+
 import carla
 import math
 
+from dataclasses import dataclass
 from typing import Optional, Tuple, List, cast
 
 from src.common.lane import Lane
 
+@dataclass
 class CarBehind:
-    def __init__(self, vehicle: carla.Vehicle, distance: float, lane: Lane) -> None:
-        self.vehicle = vehicle
-        self.distance = distance
-        self.lane = lane
+    vehicle: carla.Vehicle
+    distance: float
+    lane: Lane
         
 class CarlaMonitor:
     def __init__(self, world: carla.World) -> None:
